@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/BottomNav'
+import { useAuth } from '@/contexts/AuthContext'
+import { createSession, addExerciseToSession, saveSet, finishSession } from '@/lib/db/workouts'
+import { getExercises } from '@/lib/db/exercises'
 
 type SetData = { type: 'W' | 'N' | 'D'; weight: string; reps: string; done: boolean; prev: string }
 type Exercise = { name: string; muscle: string; equipment: string; best: string; sets: SetData[] }
@@ -131,6 +134,8 @@ function ScrollPicker({ values, selected, onChange }: {
 
 export default function ActiveWorkoutPage() {
   const router = useRouter()
+  const { userId } = useAuth()
+  const [workoutName, setWorkoutName]     = useState('Push Day')
   const [exercises, setExercises]         = useState<Exercise[]>(INITIAL_EXERCISES)
   const [sessionSecs, setSessionSecs]     = useState(0)
   const [focusedSet, setFocusedSet]       = useState<{ ei: number; si: number } | null>(null)
@@ -151,6 +156,7 @@ export default function ActiveWorkoutPage() {
   const restRemRef      = useRef<Record<string, number>>({})
   const restTotRef      = useRef<Record<string, number>>({})
   const restRunningRef  = useRef<Record<string, boolean>>({})
+  const sessionStartRef = useRef<Date>(new Date())
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -180,6 +186,25 @@ export default function ActiveWorkoutPage() {
       }
     }, 1000)
     return () => clearInterval(id)
+  }, [])
+
+  // Read pending workout from localStorage (set by workout page)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const raw = localStorage.getItem('gains_pending_workout')
+    if (!raw) return
+    try {
+      const { templateName, exerciseNames } = JSON.parse(raw) as { templateName: string; exerciseNames: string[] }
+      if (templateName) setWorkoutName(templateName)
+      if (exerciseNames?.length) {
+        const library = [...INITIAL_EXERCISES, ...EXERCISE_LIBRARY.map(e => ({
+          name: e.name, muscle: e.muscle, equipment: e.equipment, best: '—',
+          sets: [{ type: 'N' as const, weight: '0', reps: '8', done: false, prev: '—' }],
+        }))]
+        const mapped = exerciseNames.map(n => library.find(e => e.name.toLowerCase() === n.toLowerCase())).filter(Boolean) as Exercise[]
+        if (mapped.length) setExercises(mapped)
+      }
+    } catch {}
   }, [])
 
   const totalSets     = exercises.reduce((s, e) => s + e.sets.length, 0)
@@ -279,7 +304,7 @@ export default function ActiveWorkoutPage() {
             <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="rgba(255,255,255,.6)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M15 18l-6-6 6-6" /></svg>
           </button>
           <div className="flex-1 min-w-0">
-            <div className="text-[19px] font-bold tracking-[-0.4px] leading-[1.1]">Push Day</div>
+            <div className="text-[19px] font-bold tracking-[-0.4px] leading-[1.1]">{workoutName}</div>
             <div className="text-[11px] font-medium mt-[3px] tracking-[.2px]" style={{ color: 'rgba(255,150,80,.7)' }}>
               {exercises.length} exercises · {totalSets} sets
             </div>
@@ -625,7 +650,36 @@ export default function ActiveWorkoutPage() {
             </div>
 
             <button
-              onClick={() => router.push('/')}
+              onClick={async () => {
+                if (userId) {
+                  try {
+                    const dbExercises = await getExercises()
+                    const sid = await createSession(userId, sessionStartRef.current)
+                    for (let ei = 0; ei < exercises.length; ei++) {
+                      const ex    = exercises[ei]
+                      const dbEx  = dbExercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase())
+                      if (!dbEx) continue
+                      const seId = await addExerciseToSession(sid, dbEx.id, ei)
+                      for (let si = 0; si < ex.sets.length; si++) {
+                        const set = ex.sets[si]
+                        if (!set.done) continue
+                        await saveSet(seId, {
+                          set_number: si + 1,
+                          set_type:   set.type,
+                          weight_kg:  parseFloat(set.weight) || null,
+                          reps:       parseInt(set.reps) || null,
+                          completed:  true,
+                        })
+                      }
+                    }
+                    await finishSession(sid, { durationSecs: sessionSecs, energy, notes })
+                  } catch (err) {
+                    console.error('Failed to save workout:', err)
+                  }
+                }
+                if (typeof window !== 'undefined') localStorage.removeItem('gains_pending_workout')
+                router.push('/')
+              }}
               className="cta-gradient w-full h-[54px] rounded-[27px] border-none cursor-pointer text-[15px] font-bold tracking-[1.1px] text-white mb-[9px]"
               style={{ fontFamily: 'inherit' }}
             >SAVE WORKOUT</button>

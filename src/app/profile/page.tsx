@@ -1,29 +1,83 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BottomNav } from '@/components/BottomNav'
+import { useAuth } from '@/contexts/AuthContext'
+import { getProfile, upsertProfile } from '@/lib/db/profile'
+import { getHomeStats } from '@/lib/db/analytics'
 
 export default function ProfilePage() {
-  const [name,     setName]     = useState('Marcus')
-  const [nickname, setNickname] = useState('The Gainz Goblin')
-  const [weight,   setWeight]   = useState('82.5')
-  const [height]                = useState('178')
-  const [units,    setUnits]    = useState<'kg'|'lbs'>('kg')
-  const [showEdit, setShowEdit] = useState(false)
-  const [editName,     setEditName]     = useState('')
-  const [editNickname, setEditNickname] = useState('')
-  const [editWeight,   setEditWeight]   = useState('')
+  const { userId } = useAuth()
+  const [name,       setName]       = useState('Gains User')
+  const [nickname,   setNickname]   = useState('The Gainz Goblin')
+  const [weight,     setWeight]     = useState('82.5')
+  const [height]                    = useState('178')
+  const [units,      setUnits]      = useState<'kg'|'lbs'>('kg')
+  const [showEdit,   setShowEdit]   = useState(false)
+  const [editName,   setEditName]   = useState('')
+  const [editNick,   setEditNick]   = useState('')
+  const [editWeight, setEditWeight] = useState('')
 
-  const displayWeight = units === 'kg' ? weight : String(Math.round(parseFloat(weight) * 2.205 * 10) / 10)
+  // Stats
+  const [totalWorkouts, setTotalWorkouts] = useState(0)
+  const [streak,        setStreak]        = useState(0)
+
+  useEffect(() => {
+    if (!userId) return
+
+    getProfile(userId).then(p => {
+      if (!p) return
+      if (p.display_name) setName(p.display_name)
+      if (p.nickname)     setNickname(p.nickname)
+      if (p.weight_kg)    setWeight(String(p.weight_kg))
+      if (p.unit_pref)    setUnits(p.unit_pref as 'kg' | 'lbs')
+    })
+
+    // All-time stats from sessions (approximate via analytics)
+    getHomeStats(userId).then(s => {
+      setStreak(s.streak)
+      // getHomeStats only covers recent data; total workouts would need a separate count
+    })
+
+    // Simple count of all sessions
+    ;(async () => {
+      const { createClient } = await import('@/lib/supabase')
+      const db = createClient()
+      const { count } = await db
+        .from('workout_sessions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_active', false)
+      setTotalWorkouts(count ?? 0)
+    })()
+  }, [userId])
+
+  const displayWeight = units === 'kg'
+    ? weight
+    : String(Math.round(parseFloat(weight) * 2.205 * 10) / 10)
 
   const openEdit = () => {
-    setEditName(name); setEditNickname(nickname); setEditWeight(weight)
+    setEditName(name); setEditNick(nickname); setEditWeight(weight)
     setShowEdit(true)
   }
-  const saveEdit = () => {
-    if (editName)     setName(editName)
-    if (editNickname) setNickname(editNickname)
-    if (editWeight)   setWeight(editWeight)
+
+  const saveEdit = async () => {
+    if (editName)   setName(editName)
+    if (editNick)   setNickname(editNick)
+    if (editWeight) setWeight(editWeight)
     setShowEdit(false)
+    if (userId) {
+      await upsertProfile(userId, {
+        display_name: editName || name,
+        nickname:     editNick || nickname,
+        weight_kg:    parseFloat(editWeight || weight) || null,
+        unit_pref:    units,
+      })
+    }
+  }
+
+  const handleUnitsChange = async (u: 'kg' | 'lbs') => {
+    setUnits(u)
+    if (userId) await upsertProfile(userId, { unit_pref: u })
   }
 
   return (
@@ -80,9 +134,9 @@ export default function ProfilePage() {
         {/* Quick stats */}
         <div className="grid gap-2 mb-5" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
           {[
-            { label:'Workouts', value:'187', warm:false },
-            { label:'Hours',    value:'228', warm:false },
-            { label:'Day Streak', value:'12', warm:true  },
+            { label:'Workouts',  value: String(totalWorkouts), warm: false },
+            { label:'Day Streak',value: String(streak),        warm: true  },
+            { label:'Height',    value: height,                warm: false },
           ].map(s => (
             <div key={s.label} className="rounded-[18px] px-[10px] py-[13px] text-center" style={{ background: s.warm ? 'rgba(255,150,60,.1)' : 'rgba(255,255,255,.05)', border: s.warm ? '1px solid rgba(255,140,60,.2)' : '1px solid rgba(255,255,255,.08)' }}>
               <div className="font-doto text-[26px] font-bold leading-none" style={{ letterSpacing: 2, color: s.warm ? 'rgba(255,200,120,.95)' : '#fff' }}>{s.value}</div>
@@ -115,12 +169,8 @@ export default function ProfilePage() {
               {(['kg','lbs'] as const).map(u => {
                 const on = units === u
                 return (
-                  <div
-                    key={u}
-                    onClick={() => setUnits(u)}
-                    className="px-4 py-[5px] rounded-[13px] text-[12px] font-bold cursor-pointer"
-                    style={{ background: on ? 'rgba(255,120,60,.85)' : 'transparent', color: on ? '#fff' : 'rgba(255,255,255,.42)' }}
-                  >{u}</div>
+                  <div key={u} onClick={() => handleUnitsChange(u)} className="px-4 py-[5px] rounded-[13px] text-[12px] font-bold cursor-pointer"
+                    style={{ background: on ? 'rgba(255,120,60,.85)' : 'transparent', color: on ? '#fff' : 'rgba(255,255,255,.42)' }}>{u}</div>
                 )
               })}
             </div>
@@ -141,25 +191,18 @@ export default function ProfilePage() {
           <div className="absolute bottom-0 left-0 right-0 z-[21] rounded-[30px_30px_0_0] px-[22px] pb-12 pt-4" style={{ background: 'linear-gradient(170deg,#241510,#170d0a)', borderTop: '1px solid rgba(255,255,255,.11)' }}>
             <div className="w-8 h-1 rounded-[2px] mx-auto mb-5" style={{ background: 'rgba(255,255,255,.15)' }} />
             <div className="text-[19px] font-extrabold tracking-[-0.4px] mb-5">Edit Profile</div>
-
             {[
-              { label:'Display Name', value:editName, onChange:(v:string) => setEditName(v), placeholder:'Your name', type:'text' },
-              { label:'Nickname',     value:editNickname, onChange:(v:string) => setEditNickname(v), placeholder:'e.g. The Gainz Goblin', type:'text' },
-              { label:'Body Weight (kg)', value:editWeight, onChange:(v:string) => setEditWeight(v), placeholder:'e.g. 82.5', type:'number' },
+              { label:'Display Name',       value:editName,   onChange:(v:string) => setEditName(v),   placeholder:'Your name',           type:'text'   },
+              { label:'Nickname',           value:editNick,   onChange:(v:string) => setEditNick(v),   placeholder:'e.g. The Gainz Goblin',type:'text'   },
+              { label:'Body Weight (kg)',   value:editWeight, onChange:(v:string) => setEditWeight(v), placeholder:'e.g. 82.5',           type:'number' },
             ].map(f => (
               <div key={f.label} className="mb-[14px]">
                 <div className="text-[11px] font-bold uppercase tracking-[.8px] mb-[7px]" style={{ color: 'rgba(255,255,255,.4)' }}>{f.label}</div>
-                <input
-                  type={f.type}
-                  value={f.value}
-                  onChange={e => f.onChange(e.target.value)}
-                  placeholder={f.placeholder}
+                <input type={f.type} value={f.value} onChange={e => f.onChange(e.target.value)} placeholder={f.placeholder}
                   className="w-full h-[46px] rounded-[14px] text-white text-[15px] font-medium px-[14px]"
-                  style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', fontFamily: 'inherit' }}
-                />
+                  style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', fontFamily: 'inherit' }} />
               </div>
             ))}
-
             <button onClick={saveEdit} className="cta-gradient w-full h-[52px] rounded-[26px] border-none cursor-pointer text-[15px] font-bold tracking-[.8px] text-white mb-[10px]" style={{ fontFamily: 'inherit' }}>Save</button>
             <button onClick={() => setShowEdit(false)} className="w-full h-11 rounded-[26px] cursor-pointer text-[14px] font-semibold bg-transparent" style={{ border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.42)', fontFamily: 'inherit' }}>Cancel</button>
           </div>

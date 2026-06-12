@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Outfit } from 'next/font/google'
+import { Providers } from '@/components/Providers'
 import './globals.css'
 
 const outfit = Outfit({
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="h-full overflow-hidden bg-[#060403] text-white"
         style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
