@@ -188,9 +188,24 @@ export default function ActiveWorkoutPage() {
     return () => clearInterval(id)
   }, [])
 
-  // Read pending workout from localStorage (set by workout page)
+  // Restore session state from localStorage (supports resume after navigating away)
   useEffect(() => {
     if (typeof window === 'undefined') return
+
+    // Try resuming a saved session first
+    const savedRaw = localStorage.getItem('gains_session_state')
+    if (savedRaw) {
+      try {
+        const saved = JSON.parse(savedRaw) as { name: string; exercises: Exercise[]; sessionSecs: number }
+        setWorkoutName(saved.name)
+        setExercises(saved.exercises)
+        setSessionSecs(saved.sessionSecs)
+        sessionStartRef.current = new Date(Date.now() - saved.sessionSecs * 1000)
+        return
+      } catch {}
+    }
+
+    // Fresh start — read pending workout
     const raw = localStorage.getItem('gains_pending_workout')
     if (!raw) return
     try {
@@ -204,7 +219,50 @@ export default function ActiveWorkoutPage() {
         const mapped = exerciseNames.map(n => library.find(e => e.name.toLowerCase() === n.toLowerCase())).filter(Boolean) as Exercise[]
         if (mapped.length) setExercises(mapped)
       }
+      // Mark session as active
+      localStorage.setItem('gains_active_session', JSON.stringify({ startedAt: new Date().toISOString(), name: templateName || 'My Workout' }))
     } catch {}
+  }, [])
+
+  // Persist session state on every exercises change (debounced)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const id = setTimeout(() => {
+      localStorage.setItem('gains_session_state', JSON.stringify({ name: workoutName, exercises, sessionSecs }))
+    }, 800)
+    return () => clearTimeout(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exercises])
+
+  // Pick up exercises added from the workout page while session is active
+  const checkAdditions = () => {
+    if (typeof window === 'undefined') return
+    const raw = localStorage.getItem('gains_session_additions')
+    if (!raw) return
+    try {
+      const names: string[] = JSON.parse(raw)
+      if (!names.length) return
+      localStorage.removeItem('gains_session_additions')
+      const library = [...INITIAL_EXERCISES, ...EXERCISE_LIBRARY.map(e => ({
+        name: e.name, muscle: e.muscle, equipment: e.equipment, best: '—',
+        sets: [{ type: 'N' as const, weight: '0', reps: '8', done: false, prev: '—' }],
+      }))]
+      setExercises(prev => {
+        const toAdd = names
+          .filter(n => !prev.some(e => e.name.toLowerCase() === n.toLowerCase()))
+          .map(n => library.find(e => e.name.toLowerCase() === n.toLowerCase()))
+          .filter(Boolean) as Exercise[]
+        return toAdd.length ? [...prev, ...toAdd] : prev
+      })
+    } catch {}
+  }
+
+  useEffect(() => {
+    checkAdditions()
+    const handler = () => { if (document.visibilityState === 'visible') checkAdditions() }
+    document.addEventListener('visibilitychange', handler)
+    return () => document.removeEventListener('visibilitychange', handler)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const totalSets     = exercises.reduce((s, e) => s + e.sets.length, 0)
@@ -677,7 +735,12 @@ export default function ActiveWorkoutPage() {
                     console.error('Failed to save workout:', err)
                   }
                 }
-                if (typeof window !== 'undefined') localStorage.removeItem('gains_pending_workout')
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('gains_pending_workout')
+                  localStorage.removeItem('gains_session_state')
+                  localStorage.removeItem('gains_active_session')
+                  localStorage.removeItem('gains_session_additions')
+                }
                 router.push('/')
               }}
               className="cta-gradient w-full h-[54px] rounded-[27px] border-none cursor-pointer text-[15px] font-bold tracking-[1.1px] text-white mb-[9px]"

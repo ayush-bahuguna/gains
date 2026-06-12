@@ -92,3 +92,29 @@ CREATE POLICY "read exercises"
 
 CREATE POLICY "insert custom exercise"
   ON exercises FOR INSERT WITH CHECK (created_by = auth.uid());
+
+-- User-created workout templates
+CREATE TABLE workout_templates (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name       text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE template_exercises (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id  uuid NOT NULL REFERENCES workout_templates(id) ON DELETE CASCADE,
+  exercise_id  uuid NOT NULL REFERENCES exercises(id),
+  order_index  integer NOT NULL
+);
+
+ALTER TABLE workout_templates  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE template_exercises ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "own templates"
+  ON workout_templates FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY "own template exercises"
+  ON template_exercises FOR ALL USING (
+    template_id IN (SELECT id FROM workout_templates WHERE user_id = auth.uid())
+  );
