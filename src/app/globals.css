@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --orange: #ff6a1f;
+  --font-doto: 'Doto', monospace;
+}
+
+* { box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+::-webkit-scrollbar { width: 0; height: 0; }
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+input:focus, textarea:focus { outline: none; }
+::placeholder { color: rgba(255,255,255,.2); }
+
+/* App shell */
+.app-bg {
+  background: radial-gradient(100% 55% at 50% 0%, #1e1310 0%, #120c0a 32%, #090706 60%, #060403 100%);
+}
+.app-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(85% 100% at 50% -10%, rgba(255,110,40,.14), transparent 70%),
+    radial-gradient(40% 30% at 10% 80%, rgba(255,90,30,.16), transparent 70%),
+    radial-gradient(35% 28% at 92% 22%, rgba(255,120,40,.12), transparent 70%);
+  z-index: 0;
+}
+
+/* Glass card */
+.glass { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.glass-warm { background: linear-gradient(157deg, rgba(255,238,224,.1) 0%, rgba(255,210,180,.04) 60%, rgba(255,196,166,.02) 100%); border: 1px solid rgba(255,255,255,.09); }
+
+/* CTA gradient button */
+.cta-gradient {
+  background-image:
+    linear-gradient(180deg, rgba(255,214,196,.42) 0%, rgba(255,255,255,0) 26%),
+    linear-gradient(90deg, #f96d45 0%, #e0402a 15%, #a82a34 27%, #8a1d44 40%, #851d46 50%, #8d1e40 60%, #b32636 71%, #d83523 85%, #ec5a37 100%);
+  box-shadow: 0 16px 34px -10px rgba(214,48,30,.6), inset 0 1px 0 rgba(255,255,255,.42), inset 0 -3px 8px rgba(120,16,34,.4);
+}
+.cta-gradient:active { transform: scale(.98); }
+
+/* Nav bar */
+.nav-glass {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
+  box-shadow: 0 16px 40px -14px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+/* Bottom nav active tab */
+.nav-active {
+  background: linear-gradient(180deg, #ff8f49, #ff5e2b 72%);
+  box-shadow: 0 8px 18px -4px rgba(255,80,25,.6), inset 0 1px 0 rgba(255,255,255,.42);
+}
+
+/* Doto font */
+.font-doto { font-family: var(--font-doto); }
