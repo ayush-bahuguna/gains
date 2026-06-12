@@ -33,8 +33,8 @@ export function BottomNav({ active }: { active: Tab }) {
       style={{ height: 'calc(66px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div
-        className="nav-glass absolute left-6 right-6 flex items-center justify-around px-2 rounded-[33px]"
-        style={{ bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', height: 66 }}
+        className="nav-glass absolute left-1/2 -translate-x-1/2 flex items-center px-2 rounded-[33px]"
+        style={{ bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', height: 66, width: 'max-content' }}
       >
         {TABS.map((tab) => {
           const isActive = active === tab.id
@@ -42,7 +42,7 @@ export function BottomNav({ active }: { active: Tab }) {
             <Link
               key={tab.id}
               href={tab.href}
-              className="flex-1 h-full flex items-center justify-center"
+              className="w-[50px] h-full flex items-center justify-center"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <div
