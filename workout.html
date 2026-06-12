@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#060403">
+  <title>Gains — Start Workout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    html, body { margin: 0; height: 100%; background: #060403; overflow: hidden; }
+    #app {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: radial-gradient(100% 55% at 50% 0%, #1e1310 0%, #120c0a 32%, #090706 60%, #060403 100%);
+      font-family: 'Outfit', system-ui, sans-serif; color: #fff;
+    }
+    #app::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(85% 100% at 50% -10%, rgba(255,110,40,.16), transparent 70%);
+    }
+    .label { font-size: 13px; font-weight: 400; color: rgba(255,255,255,.4); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+    .title { font-size: 28px; font-weight: 300; letter-spacing: -0.5px; }
+    .back {
+      margin-top: 40px; padding: 14px 32px; border-radius: 30px; border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-family: inherit;
+      font-size: 13px; font-weight: 600; letter-spacing: 1px; cursor: pointer;
+      text-decoration: none; display: inline-block;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="label">Coming Soon</div>
+    <div class="title">Start Workout</div>
+    <a class="back" href="index.html">← Back to Home</a>
+  </div>
+</body>
+</html>

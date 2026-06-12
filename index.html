@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#060403">
+  <title>Gains</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #060403;
+      overflow: hidden;
+    }
+
+    :root {
+      --orange: #ff6a1f;
+      --orange-bright: #f96d45;
+      --orange-dim: rgba(255,110,40,.16);
+      --glass-bg: rgba(255,255,255,.04);
+      --glass-border: rgba(255,255,255,.08);
+      --text: #ffffff;
+      --text-dim: rgba(255,255,255,.5);
+      --text-faint: rgba(255,255,255,.28);
+      --font-ui: 'Outfit', system-ui, sans-serif;
+      --font-glyph: 'Doto', monospace;
+    }
+
+    ::-webkit-scrollbar { width: 0; height: 0; }
+
+    /* ── APP SHELL ── */
+    #app {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(100% 55% at 50% 0%, #1e1310 0%, #120c0a 32%, #090706 60%, #060403 100%);
+      font-family: var(--font-ui);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Ambient glow layer */
+    #app::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(85% 100% at 50% -10%, rgba(255,110,40,.16), transparent 70%),
+        radial-gradient(40% 30% at 10% 80%, rgba(255,90,30,.18), transparent 70%),
+        radial-gradient(35% 28% at 92% 22%, rgba(255,120,40,.14), transparent 70%);
+      z-index: 0;
+    }
+
+    /* ── STATUS BAR ── */
+    #status-bar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 16px) 28px 0;
+      padding-top: max(env(safe-area-inset-top), 16px);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      flex: none;
+      min-height: 52px;
+    }
+
+    #status-bar .dynamic-island {
+      position: absolute;
+      left: 50%;
+      top: max(env(safe-area-inset-top, 16px), 14px);
+      transform: translateX(-50%);
+      width: 108px;
+      height: 31px;
+      background: #000;
+      border-radius: 20px;
+    }
+
+    #status-bar .sys-icons {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* ── SCROLL AREA ── */
+    #scroll {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 22px;
+      padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-top: 22px;
+    }
+
+    .header-greeting {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-dim);
+      letter-spacing: .3px;
+    }
+
+    .header-date {
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: -1px;
+      margin-top: 5px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .avatar-ring {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      padding: 2px;
+      background: linear-gradient(150deg, rgba(255,140,60,.7), rgba(255,255,255,.12));
+      flex: none;
+    }
+
+    .avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-placeholder-icon {
+      color: rgba(255,255,255,.35);
+    }
+
+    /* ── READINESS RING ── */
+    .ring-wrapper {
+      position: relative;
+      width: 230px;
+      height: 230px;
+      margin: 22px auto 0;
+    }
+
+    .ring-wrapper svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .streak-number {
+      font-family: var(--font-glyph);
+      font-weight: 300;
+      font-variation-settings: 'wght' 300, 'ROND' 100;
+      font-size: 88px;
+      line-height: .82;
+      letter-spacing: 5px;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255,150,60,.35);
+    }
+
+    .streak-label {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,.5);
+      letter-spacing: 2.5px;
+      white-space: nowrap;
+    }
+
+    .ring-caption {
+      text-align: center;
+      margin-top: 5px;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,.38);
+    }
+
+    .ring-caption span {
+      color: rgba(255,170,90,.95);
+      font-weight: 600;
+    }
+
+    /* ── STATS TILES ── */
+    .stats-row {
+      display: flex;
+      gap: 9px;
+      margin-top: 20px;
+    }
+
+    .stat-tile {
+      flex: 1;
+      border-radius: 20px;
+      padding: 14px 12px 16px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,236,224,.32);
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-family: var(--font-glyph);
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-top: 10px;
+      color: #fff;
+    }
+
+    .stat-value-unit {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.38);
+      margin: 0 1px 0 2px;
+    }
+
+    .stat-sublabel {
+      font-size: 10px;
+      color: rgba(255,236,224,.25);
+      margin-top: 6px;
+      font-weight: 400;
+      letter-spacing: .3px;
+    }
+
+    /* ── CTA BUTTON ── */
+    .cta-btn {
+      width: 100%;
+      margin-top: 16px;
+      height: 58px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #fff;
+      background-image:
+        linear-gradient(180deg, rgba(255,214,196,.42) 0%, rgba(255,255,255,0) 26%),
+        linear-gradient(90deg,
+          #f96d45 0%, #e0402a 15%, #a82a34 27%,
+          #8a1d44 40%, #851d46 50%, #8d1e40 60%,
+          #b32636 71%, #d83523 85%, #ec5a37 100%);
+      box-shadow:
+        0 16px 34px -10px rgba(214,48,30,.6),
+        inset 0 1px 0 rgba(255,255,255,.42),
+        inset 0 -3px 8px rgba(120,16,34,.4);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .1s, box-shadow .1s;
+    }
+
+    .cta-btn:active {
+      transform: scale(.98);
+      box-shadow: 0 8px 20px -8px rgba(214,48,30,.5), inset 0 1px 0 rgba(255,255,255,.3);
+    }
+
+    /* ── 7 DAYS PROGRESS ── */
+    .progress-card {
+      margin-top: 16px;
+      border-radius: 24px;
+      padding: 18px 16px 20px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,.35);
+      font-weight: 400;
+    }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 7px;
+      margin-top: 16px;
+      align-items: end;
+    }
+
+    .day-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .day-cell {
+      width: 100%;
+      height: 44px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .day-cell.workout {
+      background: rgba(255,110,45,.14);
+      border: 1px solid rgba(255,140,70,.32);
+      color: #ff9a52;
+    }
+
+    .day-cell.rest {
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.3);
+    }
+
+    .day-cell.skipped {
+      background: rgba(255,255,255,.02);
+      border: 1px dashed rgba(255,255,255,.14);
+      color: rgba(255,255,255,.22);
+    }
+
+    .day-cell.today {
+      height: 56px;
+      border-radius: 15px;
+      transform: translateY(-6px);
+      background-image:
+        linear-gradient(165deg, rgba(255,255,255,.18), transparent 60%),
+        linear-gradient(165deg, #ffa24a, #ff5e2b 70%);
+      border: 1px solid rgba(255,180,120,.5);
+      color: #fff;
+      box-shadow: 0 10px 22px -6px rgba(255,80,25,.55), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+
+    .day-cell.future {
+      background: rgba(255,255,255,.02);
+      border: 1px dashed rgba(255,255,255,.1);
+    }
+
+    .day-name {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,.35);
+    }
+
+    .day-name.today {
+      color: #ff9a52;
+      font-weight: 700;
+    }
+
+    /* ── BOTTOM NAV ── */
+    #nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(66px + env(safe-area-inset-bottom, 0px));
+      z-index: 10;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .nav-bar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 6px;
+      border-radius: 34px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+      box-shadow: 0 16px 40px -14px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+
+    .nav-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,.38);
+      transition: transform .15s;
+    }
+
+    .nav-item.active .nav-icon-wrap {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(180deg, #ff8f49, #ff5e2b 72%);
+      box-shadow: 0 8px 18px -4px rgba(255,80,25,.6), inset 0 1px 0 rgba(255,255,255,.42);
+      color: #fff;
+    }
+
+    .nav-item:active .nav-icon-wrap {
+      transform: scale(.9);
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Status Bar -->
+  <div id="status-bar">
+    <span id="clock">9:41</span>
+    <div class="dynamic-island"></div>
+    <div class="sys-icons">
+      <!-- Signal -->
+      <svg viewBox="0 0 24 22" width="17" height="15" fill="currentColor" style="display:block">
+        <rect x="1" y="15" width="3.6" height="6" rx="1"/>
+        <rect x="6.8" y="11" width="3.6" height="10" rx="1"/>
+        <rect x="12.6" y="6.5" width="3.6" height="14.5" rx="1"/>
+        <rect x="18.4" y="2" width="3.6" height="19" rx="1"/>
+      </svg>
+      <!-- WiFi -->
+      <svg viewBox="0 0 24 20" width="17" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:block">
+        <path d="M3 7.2C5.8 4.8 8.8 3.6 12 3.6s6.2 1.2 9 3.6"/>
+        <path d="M6 10.7c1.8-1.6 3.8-2.4 6-2.4s4.2.8 6 2.4"/>
+        <path d="M9 14.2c.9-.8 1.9-1.2 3-1.2s2.1.4 3 1.2"/>
+        <circle cx="12" cy="17.4" r="1.2" fill="currentColor" stroke="none"/>
+      </svg>
+      <!-- Battery -->
+      <svg viewBox="0 0 26 16" width="22" height="14" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block">
+        <rect x="1" y="2" width="20" height="12" rx="3"/>
+        <rect x="3" y="4" width="14.5" height="8" rx="1.5" fill="currentColor" stroke="none"/>
+        <rect x="22.5" y="5.5" width="2" height="5" rx="1" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Scroll Area -->
+  <div id="scroll">
+
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <div class="header-greeting" id="greeting">Good Morning</div>
+        <div class="header-date" id="date-display">Today, Jun 12</div>
+      </div>
+      <div class="avatar-ring">
+        <div class="avatar-inner">
+          <svg class="avatar-placeholder-icon" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4a3.6 3.6 0 1 0 0 7.2A3.6 3.6 0 0 0 12 4z"/>
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Readiness Ring -->
+    <div class="ring-wrapper">
+      <svg viewBox="0 0 240 240">
+        <defs>
+          <linearGradient id="ringGrad" gradientUnits="userSpaceOnUse" x1="120" y1="214" x2="120" y2="36">
+            <stop offset="0%" stop-color="#ff3416"/>
+            <stop offset="38%" stop-color="#ff6a1f"/>
+            <stop offset="72%" stop-color="#ffa12a"/>
+            <stop offset="100%" stop-color="#ffd96e"/>
+          </linearGradient>
+        </defs>
+        <g transform="rotate(108 120 120)">
+          <circle cx="120" cy="120" r="100" pathLength="100" fill="none"
+            stroke="rgba(255,255,255,.07)" stroke-width="13"
+            stroke-linecap="round" stroke-dasharray="90 10"/>
+          <circle cx="120" cy="120" r="100" pathLength="100" fill="none"
+            stroke="url(#ringGrad)" stroke-width="13"
+            stroke-linecap="round" stroke-dasharray="57 43"/>
+        </g>
+      </svg>
+      <div class="ring-center">
+        <div class="streak-number" id="streak-num">12</div>
+        <div class="streak-label">DAY STREAK</div>
+      </div>
+    </div>
+    <div class="ring-caption">Personal best 21 days · <span>9 to go</span></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-tile">
+        <div class="stat-label">Workouts</div>
+        <div class="stat-value">4</div>
+        <div class="stat-sublabel">this week</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" style="font-size:32px;">
+          3<span class="stat-value-unit">h</span>28<span class="stat-value-unit">m</span>
+        </div>
+        <div class="stat-sublabel">this week</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-label">Volume</div>
+        <div class="stat-value" style="font-size:28px;letter-spacing:1px;">18.2</div>
+        <div class="stat-sublabel">k kg lifted</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="cta-btn" onclick="window.location.href='workout.html'">START TRAINING</button>
+
+    <!-- 7 Days Progress -->
+    <div class="progress-card">
+      <div class="card-header">
+        <span class="card-title">7 Days Progress</span>
+        <span class="card-meta">4 workouts</span>
+      </div>
+      <div class="days-grid">
+
+        <!-- Mon: workout -->
+        <div class="day-col">
+          <div class="day-cell workout">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:block">
+              <path d="M12 23a7 7 0 0 0 7-7c0-2.1-1-4-3-5.6.3 1.6-.7 2.7-1.6 2.7-1.7 0-1-2.5-1-4.1 0-2.2-1.4-4.4-3.4-6 .5 3.1-1.6 4.7-2.8 6.3C6.1 10.7 5 12.8 5 16a7 7 0 0 0 7 7z"/>
+            </svg>
+          </div>
+          <span class="day-name">M</span>
+        </div>
+
+        <!-- Tue: rest -->
+        <div class="day-col">
+          <div class="day-cell rest">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:block">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>
+            </svg>
+          </div>
+          <span class="day-name">T</span>
+        </div>
+
+        <!-- Wed: workout -->
+        <div class="day-col">
+          <div class="day-cell workout">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:block">
+              <path d="M12 23a7 7 0 0 0 7-7c0-2.1-1-4-3-5.6.3 1.6-.7 2.7-1.6 2.7-1.7 0-1-2.5-1-4.1 0-2.2-1.4-4.4-3.4-6 .5 3.1-1.6 4.7-2.8 6.3C6.1 10.7 5 12.8 5 16a7 7 0 0 0 7 7z"/>
+            </svg>
+          </div>
+          <span class="day-name">W</span>
+        </div>
+
+        <!-- Thu: skipped -->
+        <div class="day-col">
+          <div class="day-cell skipped">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" style="display:block">
+              <path d="M6 6 18 18M18 6 6 18"/>
+            </svg>
+          </div>
+          <span class="day-name">T</span>
+        </div>
+
+        <!-- Fri: workout -->
+        <div class="day-col">
+          <div class="day-cell workout">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:block">
+              <path d="M12 23a7 7 0 0 0 7-7c0-2.1-1-4-3-5.6.3 1.6-.7 2.7-1.6 2.7-1.7 0-1-2.5-1-4.1 0-2.2-1.4-4.4-3.4-6 .5 3.1-1.6 4.7-2.8 6.3C6.1 10.7 5 12.8 5 16a7 7 0 0 0 7 7z"/>
+            </svg>
+          </div>
+          <span class="day-name">F</span>
+        </div>
+
+        <!-- Sat: today (active) -->
+        <div class="day-col">
+          <div class="day-cell today">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" style="display:block">
+              <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>
+            </svg>
+          </div>
+          <span class="day-name today">S</span>
+        </div>
+
+        <!-- Sun: future -->
+        <div class="day-col">
+          <div class="day-cell future"></div>
+          <span class="day-name">S</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- Bottom Nav -->
+  <nav id="nav">
+    <div class="nav-bar">
+
+      <a class="nav-item active" href="index.html">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <path d="M3 10.6L12 3l9 7.6"/>
+            <path d="M5.5 9.4V20h4V14h5v6h4V9.4"/>
+          </svg>
+        </div>
+      </a>
+
+      <a class="nav-item" href="workout.html">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <path d="M8 7.5v9"/>
+            <path d="M16 7.5v9"/>
+            <path d="M5 10v4"/>
+            <path d="M19 10v4"/>
+            <path d="M8 12h8"/>
+          </svg>
+        </div>
+      </a>
+
+      <a class="nav-item" href="history.html">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <circle cx="12" cy="12" r="8.5"/>
+            <path d="M12 7v5l3.2 1.9"/>
+          </svg>
+        </div>
+      </a>
+
+      <a class="nav-item" href="analytics.html">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <path d="M4 4v16h16"/>
+            <path d="M7 14l3.4-3.6 3 2.3L20 7"/>
+          </svg>
+        </div>
+      </a>
+
+      <a class="nav-item" href="profile.html">
+        <div class="nav-icon-wrap">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block">
+            <path d="M12 4a3.6 3.6 0 1 0 0 7.2A3.6 3.6 0 0 0 12 4z"/>
+            <path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+          </svg>
+        </div>
+      </a>
+
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<script>
+  // Dynamic clock
+  function updateClock() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes();
+    document.getElementById('clock').textContent =
+      `${h % 12 || 12}:${String(m).padStart(2,'0')}`;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // Dynamic greeting
+  const hour = new Date().getHours();
+  document.getElementById('greeting').textContent =
+    hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  // Dynamic date
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  document.getElementById('date-display').textContent =
+    `Today, ${months[now.getMonth()]} ${now.getDate()}`;
+</script>
+
+</body>
+</html>
