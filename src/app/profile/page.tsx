@@ -6,7 +6,7 @@ import { getProfile, upsertProfile } from '@/lib/db/profile'
 import { getHomeStats } from '@/lib/db/analytics'
 
 export default function ProfilePage() {
-  const { userId } = useAuth()
+  const { userId, user, signOut } = useAuth()
   const [name,       setName]       = useState('Gains User')
   const [nickname,   setNickname]   = useState('The Gainz Goblin')
   const [weight,     setWeight]     = useState('82.5')
@@ -25,11 +25,11 @@ export default function ProfilePage() {
     if (!userId) return
 
     getProfile(userId).then(p => {
-      if (!p) return
-      if (p.display_name) setName(p.display_name)
-      if (p.nickname)     setNickname(p.nickname)
-      if (p.weight_kg)    setWeight(String(p.weight_kg))
-      if (p.unit_pref)    setUnits(p.unit_pref as 'kg' | 'lbs')
+      if (p?.display_name) setName(p.display_name)
+      else if (user?.name) setName(user.name)
+      if (p?.nickname)  setNickname(p.nickname)
+      if (p?.weight_kg) setWeight(String(p.weight_kg))
+      if (p?.unit_pref) setUnits(p.unit_pref as 'kg' | 'lbs')
     })
 
     // All-time stats from sessions (approximate via analytics)
@@ -102,18 +102,17 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center py-4 pb-5">
           <div className="relative w-[88px] h-[88px]">
             <div className="w-[88px] h-[88px] rounded-full p-[3px]" style={{ background: 'linear-gradient(150deg,rgba(255,140,60,.7),rgba(255,255,255,.12))' }}>
-              <div className="w-full h-full rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,.08)' }}>
-                <svg viewBox="0 0 24 24" width={42} height={42} fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,.35)', display: 'block' }}>
-                  <path d="M12 4a3.6 3.6 0 1 0 0 7.2A3.6 3.6 0 0 0 12 4z" />
-                  <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
-                </svg>
+              <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden" style={{ background: 'rgba(255,255,255,.08)' }}>
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatarUrl} alt={name} className="w-full h-full object-cover rounded-full" referrerPolicy="no-referrer" />
+                ) : (
+                  <svg viewBox="0 0 24 24" width={42} height={42} fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(255,255,255,.35)', display: 'block' }}>
+                    <path d="M12 4a3.6 3.6 0 1 0 0 7.2A3.6 3.6 0 0 0 12 4z" />
+                    <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+                  </svg>
+                )}
               </div>
-            </div>
-            <div className="absolute bottom-[2px] right-[2px] w-[26px] h-[26px] rounded-full flex items-center justify-center" style={{ background: 'rgba(255,100,40,.9)', border: '2.5px solid #0c0a09' }}>
-              <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="white" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
             </div>
           </div>
           <div className="mt-[14px] text-[24px] font-extrabold tracking-[-0.4px] text-center">{name}</div>
@@ -175,9 +174,20 @@ export default function ProfilePage() {
               })}
             </div>
           </div>
-          <div className="px-4 py-[14px] flex items-center justify-between cursor-pointer">
+          <div className="px-4 py-[14px] flex items-center justify-between cursor-pointer" style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
             <div className="text-[15px] font-semibold">Export Data</div>
             <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="rgba(255,255,255,.32)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M9 18l6-6-6-6" /></svg>
+          </div>
+          <div
+            className="px-4 py-[14px] flex items-center gap-3 cursor-pointer"
+            onClick={signOut}
+          >
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="rgba(239,68,68,.8)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <div className="text-[15px] font-semibold" style={{ color: 'rgba(239,68,68,.9)' }}>Sign Out</div>
           </div>
         </div>
       </div>
