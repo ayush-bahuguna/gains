@@ -22,29 +22,17 @@ export default function LoginPage() {
 
   return (
     <div className="app-bg app-glow fixed inset-0 flex flex-col items-center justify-between overflow-hidden">
-      {/* Top section — logo mark + wordmark + tagline */}
-      <div className="relative z-10 flex flex-col items-center pt-[18vh]">
-        {/* Logo mark */}
-        <svg viewBox="0 0 64 64" width="72" height="72" fill="none" style={{ filter: 'drop-shadow(0 0 18px rgba(255,106,31,.65))', display: 'block' }}>
-          <defs>
-            <linearGradient id="logo-g" x1="8" y1="52" x2="52" y2="8" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#ff3416"/>
-              <stop offset="50%" stopColor="#ff6a1f"/>
-              <stop offset="100%" stopColor="#ffd96e"/>
-            </linearGradient>
-          </defs>
-          <path d="M 42 15 A 20 20 0 1 0 52 32 L 40 32" stroke="url(#logo-g)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        {/* Wordmark */}
+      {/* Top section — wordmark + tagline */}
+      <div className="relative z-10 flex flex-col items-center pt-[20vh]">
         <div
-          className="mt-5 text-[40px] font-extrabold leading-none uppercase"
-          style={{ letterSpacing: 10, color: '#fff' }}
+          className="font-doto text-[68px] font-black leading-none tracking-[6px]"
+          style={{ color: '#fff', letterSpacing: 8 }}
         >
           GAINS
         </div>
         <div
-          className="mt-3 text-[14px] font-medium tracking-[0.2px] text-center px-8"
-          style={{ color: 'rgba(255,255,255,.35)' }}
+          className="mt-3 text-[15px] font-medium tracking-[0.2px] text-center px-8"
+          style={{ color: 'rgba(255,255,255,.38)' }}
         >
           Track every rep. Own your progress.
         </div>
