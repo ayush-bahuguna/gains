@@ -33,7 +33,7 @@ export function BottomNav({ active }: { active: Tab }) {
       style={{ height: 'calc(66px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div
-        className="nav-glass absolute left-6 right-6 flex items-center justify-around px-3 rounded-[34px]"
+        className="nav-glass absolute left-6 right-6 flex items-center justify-around px-2 rounded-[25px]"
         style={{ bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', height: 66 }}
       >
         {TABS.map((tab) => {

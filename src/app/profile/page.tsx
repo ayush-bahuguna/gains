@@ -9,13 +9,14 @@ export default function ProfilePage() {
   const { userId, user, signOut } = useAuth()
   const [name,       setName]       = useState('Gains User')
   const [nickname,   setNickname]   = useState('The Gainz Goblin')
-  const [weight,     setWeight]     = useState('82.5')
-  const [height]                    = useState('178')
-  const [units,      setUnits]      = useState<'kg'|'lbs'>('kg')
-  const [showEdit,   setShowEdit]   = useState(false)
-  const [editName,   setEditName]   = useState('')
-  const [editNick,   setEditNick]   = useState('')
-  const [editWeight, setEditWeight] = useState('')
+  const [weight,      setWeight]      = useState('82.5')
+  const [height,      setHeight]      = useState('178')
+  const [units,       setUnits]       = useState<'kg'|'lbs'>('kg')
+  const [showEdit,    setShowEdit]    = useState(false)
+  const [editName,    setEditName]    = useState('')
+  const [editNick,    setEditNick]    = useState('')
+  const [editWeight,  setEditWeight]  = useState('')
+  const [editHeight,  setEditHeight]  = useState('')
 
   // Stats
   const [totalWorkouts, setTotalWorkouts] = useState(0)
@@ -29,6 +30,7 @@ export default function ProfilePage() {
       else if (user?.name) setName(user.name)
       if (p?.nickname)  setNickname(p.nickname)
       if (p?.weight_kg) setWeight(String(p.weight_kg))
+      if (p?.height_cm) setHeight(String(p.height_cm))
       if (p?.unit_pref) setUnits(p.unit_pref as 'kg' | 'lbs')
     })
 
@@ -56,7 +58,7 @@ export default function ProfilePage() {
     : String(Math.round(parseFloat(weight) * 2.205 * 10) / 10)
 
   const openEdit = () => {
-    setEditName(name); setEditNick(nickname); setEditWeight(weight)
+    setEditName(name); setEditNick(nickname); setEditWeight(weight); setEditHeight(height)
     setShowEdit(true)
   }
 
@@ -64,12 +66,14 @@ export default function ProfilePage() {
     if (editName)   setName(editName)
     if (editNick)   setNickname(editNick)
     if (editWeight) setWeight(editWeight)
+    if (editHeight) setHeight(editHeight)
     setShowEdit(false)
     if (userId) {
       await upsertProfile(userId, {
         display_name: editName || name,
         nickname:     editNick || nickname,
         weight_kg:    parseFloat(editWeight || weight) || null,
+        height_cm:    parseFloat(editHeight || height) || null,
         unit_pref:    units,
       })
     }
@@ -202,9 +206,10 @@ export default function ProfilePage() {
             <div className="w-8 h-1 rounded-[2px] mx-auto mb-5" style={{ background: 'rgba(255,255,255,.15)' }} />
             <div className="text-[19px] font-extrabold tracking-[-0.4px] mb-5">Edit Profile</div>
             {[
-              { label:'Display Name',       value:editName,   onChange:(v:string) => setEditName(v),   placeholder:'Your name',           type:'text'   },
-              { label:'Nickname',           value:editNick,   onChange:(v:string) => setEditNick(v),   placeholder:'e.g. The Gainz Goblin',type:'text'   },
-              { label:'Body Weight (kg)',   value:editWeight, onChange:(v:string) => setEditWeight(v), placeholder:'e.g. 82.5',           type:'number' },
+              { label:'Display Name',       value:editName,   onChange:(v:string) => setEditName(v),   placeholder:'Your name',            type:'text'   },
+              { label:'Nickname',           value:editNick,   onChange:(v:string) => setEditNick(v),   placeholder:'e.g. The Gainz Goblin', type:'text'   },
+              { label:'Body Weight (kg)',   value:editWeight, onChange:(v:string) => setEditWeight(v), placeholder:'e.g. 82.5',            type:'number' },
+              { label:'Height (cm)',        value:editHeight, onChange:(v:string) => setEditHeight(v), placeholder:'e.g. 178',             type:'number' },
             ].map(f => (
               <div key={f.label} className="mb-[14px]">
                 <div className="text-[11px] font-bold uppercase tracking-[.8px] mb-[7px]" style={{ color: 'rgba(255,255,255,.4)' }}>{f.label}</div>
