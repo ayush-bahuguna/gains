@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { StatusBar } from '@/components/StatusBar'
 import { BottomNav } from '@/components/BottomNav'
 
 type SetData = { type: 'W' | 'N' | 'D'; weight: string; reps: string; done: boolean; prev: string }
@@ -30,6 +29,27 @@ const INITIAL_EXERCISES: Exercise[] = [
     ]},
 ]
 
+const EXERCISE_LIBRARY = [
+  { name: 'Squat',            muscle: 'Quads',     equipment: 'Barbell' },
+  { name: 'Deadlift',         muscle: 'Back',      equipment: 'Barbell' },
+  { name: 'Pull-Up',          muscle: 'Back',      equipment: 'Bodyweight' },
+  { name: 'Barbell Row',      muscle: 'Back',      equipment: 'Barbell' },
+  { name: 'Incline Press',    muscle: 'Chest',     equipment: 'Barbell' },
+  { name: 'Cable Fly',        muscle: 'Chest',     equipment: 'Cable' },
+  { name: 'Lat Pulldown',     muscle: 'Back',      equipment: 'Cable' },
+  { name: 'Seated Row',       muscle: 'Back',      equipment: 'Cable' },
+  { name: 'Bicep Curl',       muscle: 'Biceps',    equipment: 'Dumbbell' },
+  { name: 'Hammer Curl',      muscle: 'Biceps',    equipment: 'Dumbbell' },
+  { name: 'Skullcrusher',     muscle: 'Triceps',   equipment: 'Barbell' },
+  { name: 'Leg Press',        muscle: 'Quads',     equipment: 'Machine' },
+  { name: 'Romanian Deadlift',muscle: 'Hamstrings',equipment: 'Barbell' },
+  { name: 'Lateral Raise',    muscle: 'Shoulders', equipment: 'Dumbbell' },
+  { name: 'Face Pull',        muscle: 'Rear Delt', equipment: 'Cable' },
+]
+
+const WEIGHT_VALUES = Array.from({ length: 121 }, (_, i) => String(i * 2.5))
+const REPS_VALUES   = Array.from({ length: 50  }, (_, i) => String(i + 1))
+
 function fmt(s: number) {
   s = Math.max(0, Math.floor(s))
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60
@@ -37,20 +57,94 @@ function fmt(s: number) {
   return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
 }
 
+function ScrollPicker({ values, selected, onChange }: {
+  values: string[]
+  selected: string
+  onChange: (v: string) => void
+}) {
+  const ref       = useRef<HTMLDivElement>(null)
+  const timerRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const ITEM_H    = 44
+
+  useEffect(() => {
+    if (!ref.current) return
+    const idx = Math.max(0, values.indexOf(selected))
+    ref.current.scrollTop = idx * ITEM_H
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const onScroll = () => {
+    clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      if (!ref.current) return
+      const idx = Math.max(0, Math.min(values.length - 1, Math.round(ref.current.scrollTop / ITEM_H)))
+      onChange(values[idx])
+    }, 80)
+  }
+
+  return (
+    <div style={{ position: 'relative', height: ITEM_H * 5, borderRadius: 14, overflow: 'hidden', background: 'rgba(255,255,255,.04)' }}>
+      <div
+        ref={ref}
+        onScroll={onScroll}
+        style={{
+          height: '100%',
+          overflowY: 'scroll',
+          scrollSnapType: 'y mandatory',
+          maskImage: 'linear-gradient(transparent, black 28%, black 72%, transparent)',
+          WebkitMaskImage: 'linear-gradient(transparent, black 28%, black 72%, transparent)',
+        }}
+      >
+        <div style={{ height: ITEM_H * 2, flexShrink: 0 }} />
+        {values.map((v) => (
+          <div
+            key={v}
+            style={{
+              height: ITEM_H,
+              scrollSnapAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-doto)',
+              fontSize: 26,
+              fontWeight: 700,
+              letterSpacing: 2,
+              color: v === selected ? 'rgba(255,190,100,.95)' : 'rgba(255,255,255,.22)',
+            }}
+          >
+            {v}
+          </div>
+        ))}
+        <div style={{ height: ITEM_H * 2, flexShrink: 0 }} />
+      </div>
+      <div style={{
+        position: 'absolute', left: 10, right: 10,
+        top: ITEM_H * 2, height: ITEM_H,
+        borderRadius: 10,
+        background: 'rgba(255,255,255,.06)',
+        border: '1px solid rgba(255,255,255,.1)',
+        pointerEvents: 'none',
+      }} />
+    </div>
+  )
+}
+
 export default function ActiveWorkoutPage() {
   const router = useRouter()
-  const [exercises, setExercises] = useState<Exercise[]>(INITIAL_EXERCISES)
-  const [sessionSecs, setSessionSecs] = useState(0)
-  const [focusedSet, setFocusedSet] = useState<{ ei: number; si: number } | null>(null)
+  const [exercises, setExercises]         = useState<Exercise[]>(INITIAL_EXERCISES)
+  const [sessionSecs, setSessionSecs]     = useState(0)
+  const [focusedSet, setFocusedSet]       = useState<{ ei: number; si: number } | null>(null)
   const [setTimerRunning, setSetTimerRunning] = useState<string | null>(null)
   const [setTimerResults, setSetTimerResults] = useState<Record<string, number>>({})
-  const [setElapsedLive, setSetElapsedLive] = useState(0)
+  const [setElapsedLive, setSetElapsedLive]   = useState(0)
   const [restRemaining, setRestRemaining] = useState<Record<string, number>>({})
   const [restTotal, setRestTotal]         = useState<Record<string, number>>({})
   const [restRunning, setRestRunning]     = useState<Record<string, boolean>>({})
-  const [showFinish, setShowFinish] = useState(false)
-  const [energy, setEnergy]         = useState(3)
-  const [notes, setNotes]           = useState('')
+  const [showFinish, setShowFinish]       = useState(false)
+  const [energy, setEnergy]               = useState(3)
+  const [notes, setNotes]                 = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [showAddExercise, setShowAddExercise] = useState(false)
 
   const setElapsedRef   = useRef(0)
   const setRunningRef   = useRef<string | null>(null)
@@ -58,7 +152,6 @@ export default function ActiveWorkoutPage() {
   const restTotRef      = useRef<Record<string, number>>({})
   const restRunningRef  = useRef<Record<string, boolean>>({})
 
-  // Master tick
   useEffect(() => {
     const id = setInterval(() => {
       setSessionSecs(s => s + 1)
@@ -66,7 +159,6 @@ export default function ActiveWorkoutPage() {
         setElapsedRef.current++
         setSetElapsedLive(setElapsedRef.current)
       }
-      // rest timers
       let changed = false
       const newRem = { ...restRemRef.current }
       const newTot = { ...restTotRef.current }
@@ -111,6 +203,20 @@ export default function ActiveWorkoutPage() {
     if (focusedSet?.ei === ei && focusedSet?.si === si) setFocusedSet(null)
   }
 
+  const removeExercise = (ei: number) => {
+    setExercises(ex => ex.filter((_, i) => i !== ei))
+    if (focusedSet?.ei === ei) setFocusedSet(null)
+    setDeleteConfirm(null)
+  }
+
+  const addExercise = (ex: typeof EXERCISE_LIBRARY[number]) => {
+    setExercises(prev => [...prev, {
+      name: ex.name, muscle: ex.muscle, equipment: ex.equipment, best: '—',
+      sets: [{ type: 'N', weight: '0', reps: '8', done: false, prev: '—' }],
+    }])
+    setShowAddExercise(false)
+  }
+
   const updateField = (ei: number, si: number, field: 'weight' | 'reps', val: string) => {
     setExercises(ex => ex.map((e, i) => i !== ei ? e : { ...e, sets: e.sets.map((s, j) => j !== si ? s : { ...s, [field]: val }) }))
   }
@@ -148,18 +254,11 @@ export default function ActiveWorkoutPage() {
     setRestRunning(r => ({ ...r, [eis]: false }))
   }
 
-  const openSet = (ei: number, si: number) => setFocusedSet({ ei, si })
+  const openSet  = (ei: number, si: number) => setFocusedSet({ ei, si })
   const closeSet = () => setFocusedSet(null)
-  const navSet  = (dir: number) => {
-    if (!focusedSet) return
-    const newSi = focusedSet.si + dir
-    const ex = exercises[focusedSet.ei]
-    if (newSi < 0 || newSi >= ex.sets.length) return
-    setFocusedSet({ ei: focusedSet.ei, si: newSi })
-  }
 
-  const fs     = focusedSet ? exercises[focusedSet.ei]?.sets[focusedSet.si] : null
-  const fsKey  = focusedSet ? `${focusedSet.ei}-${focusedSet.si}` : ''
+  const fs        = focusedSet ? exercises[focusedSet.ei]?.sets[focusedSet.si] : null
+  const fsKey     = focusedSet ? `${focusedSet.ei}-${focusedSet.si}` : ''
   const fsRunning = setTimerRunning === fsKey
   const fsResult  = fsKey ? setTimerResults[fsKey] : undefined
   const fsEis     = focusedSet ? String(focusedSet.ei) : ''
@@ -169,13 +268,18 @@ export default function ActiveWorkoutPage() {
 
   return (
     <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
-      <StatusBar />
-
       {/* Workout header */}
       <div className="relative z-10 flex-none px-5 pt-[10px]">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.back()}
+            className="w-[28px] h-[28px] rounded-full flex items-center justify-center flex-shrink-0 border-none cursor-pointer"
+            style={{ background: 'rgba(255,255,255,.07)' }}
+          >
+            <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="rgba(255,255,255,.6)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
           <div className="flex-1 min-w-0">
-            <div className="text-[19px] font-extrabold tracking-[-0.4px] leading-[1.1]">Push Day</div>
+            <div className="text-[19px] font-bold tracking-[-0.4px] leading-[1.1]">Push Day</div>
             <div className="text-[11px] font-medium mt-[3px] tracking-[.2px]" style={{ color: 'rgba(255,150,80,.7)' }}>
               {exercises.length} exercises · {totalSets} sets
             </div>
@@ -200,79 +304,87 @@ export default function ActiveWorkoutPage() {
         {exercises.map((ex, ei) => {
           let setNum = 0
           return (
-            <div key={ei} className="mb-[13px] rounded-[22px] overflow-hidden" style={{ background: 'linear-gradient(157deg,rgba(255,238,224,.1) 0%,rgba(255,210,180,.04) 60%,rgba(255,196,166,.02) 100%)', border: '1px solid rgba(255,255,255,.09)' }}>
-              {/* Ex header */}
-              <div className="px-4 pt-[14px] pb-[10px] flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[17px] font-bold tracking-[-0.2px] truncate">{ex.name}</div>
-                  <div className="flex items-center gap-[5px] mt-[6px] flex-wrap">
-                    <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,110,45,.15)', color: 'rgba(255,160,100,.95)' }}>{ex.muscle}</span>
-                    <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,255,255,.07)', color: 'rgba(255,255,255,.5)' }}>{ex.equipment}</span>
-                    {(restTotal[String(ei)] || 0) > 0 && (
-                      <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,120,40,.1)', color: 'rgba(255,175,90,.8)' }}>
-                        💤 {fmt(restTotal[String(ei)])} rest
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 ml-3">
-                  <div className="text-[10px] font-semibold uppercase tracking-[.8px] mb-[3px]" style={{ color: 'rgba(255,255,255,.28)' }}>Best</div>
-                  <div className="text-[14px] font-bold tracking-[-0.2px]" style={{ color: 'rgba(255,160,90,.9)' }}>{ex.best}</div>
-                  <div className="text-[11px] font-medium mt-[3px]" style={{ color: 'rgba(255,255,255,.28)' }}>{ex.sets.filter(s => s.done).length} / {ex.sets.length} sets</div>
-                </div>
-              </div>
-
-              {/* Table header */}
-              <div className="h-[1px] mx-[14px]" style={{ background: 'rgba(255,255,255,.07)' }} />
-              <div className="grid px-[14px] py-[6px] items-center text-[10px] font-bold tracking-[.8px] uppercase" style={{ gridTemplateColumns: '28px 1fr 56px 44px 44px 30px', gap: 4, color: 'rgba(255,255,255,.2)' }}>
-                <div className="text-center">SET</div><div className="pl-[2px]">PREV</div><div className="text-center">KG</div><div className="text-center">REPS</div><div className="text-center">TIME</div><div />
-              </div>
-
-              {/* Sets */}
-              {ex.sets.map((set, si) => {
-                const n = set.type === 'W' ? 'W' : set.type === 'D' ? 'D' : String(++setNum)
-                const key = `${ei}-${si}`
-                const timerRes = setTimerResults[key]
-                const isRunning = setTimerRunning === key
-                const isFocused = focusedSet?.ei === ei && focusedSet?.si === si
-                return (
-                  <div key={si}>
-                    <div
-                      className="grid px-[14px] py-[6px] items-center cursor-pointer"
-                      style={{ gridTemplateColumns: '28px 1fr 56px 44px 44px 30px', gap: 4, background: set.done ? 'rgba(255,110,45,.09)' : isFocused ? 'rgba(255,100,30,.06)' : '#1a1310' }}
-                      onClick={() => openSet(ei, si)}
-                    >
-                      <div className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[11px] font-bold"
-                        style={{ background: set.type==='W' ? 'rgba(255,200,60,.15)' : set.type==='D' ? 'rgba(200,100,255,.15)' : 'rgba(255,255,255,.07)', color: set.type==='W' ? '#ffc840' : set.type==='D' ? '#c87bff' : 'rgba(255,255,255,.5)', border: isFocused ? '1.5px solid rgba(255,140,60,.8)' : '1.5px solid transparent' }}>
-                        {n}
-                      </div>
-                      <div className="text-[12px] font-medium pl-[2px] truncate" style={{ color: 'rgba(255,255,255,.27)' }}>{set.prev}</div>
-                      <div className="h-[34px] rounded-[10px] flex items-center justify-center text-[14px] font-bold" style={{ border: set.done ? '1px solid rgba(255,110,45,.28)' : '1px solid rgba(255,255,255,.1)', background: set.done ? 'rgba(255,110,45,.08)' : 'rgba(255,255,255,.05)' }}>{set.weight}</div>
-                      <div className="h-[34px] rounded-[10px] flex items-center justify-center text-[14px] font-bold" style={{ border: set.done ? '1px solid rgba(255,110,45,.28)' : '1px solid rgba(255,255,255,.1)', background: set.done ? 'rgba(255,110,45,.08)' : 'rgba(255,255,255,.05)' }}>{set.reps}</div>
-                      <div className="font-doto text-[11px] font-bold text-center leading-none" style={{ color: 'rgba(255,160,80,.6)', letterSpacing: .8 }}>
-                        {timerRes !== undefined ? fmt(timerRes) : isRunning ? '●' : ''}
-                      </div>
-                      <div
-                        onClick={e => { e.stopPropagation(); toggleDone(ei, si) }}
-                        className="w-7 h-7 rounded-full flex items-center justify-center mx-auto flex-shrink-0 cursor-pointer"
-                        style={{ border: set.done ? '2px solid #ff7a35' : '1.5px solid rgba(255,255,255,.2)', background: set.done ? '#ff7a35' : 'transparent' }}
-                      >
-                        {set.done && <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="white" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M5 12l5 5L20 7" /></svg>}
-                      </div>
-                    </div>
-                    <div className="h-[1px] mx-3" style={{ background: 'rgba(255,255,255,.04)' }} />
-                  </div>
-                )
-              })}
-
-              {/* Add set */}
+            <div key={ei} className="mb-[13px]">
               <div
-                onClick={() => addSet(ei)}
-                className="px-4 py-[10px] pb-[13px] flex items-center gap-[6px] cursor-pointer text-[13px] font-semibold tracking-[.2px]"
-                style={{ color: 'rgba(255,150,80,.6)' }}
+                className="rounded-[22px] overflow-hidden"
+                style={{
+                  background: 'linear-gradient(157deg,rgba(255,238,224,.1) 0%,rgba(255,210,180,.04) 60%,rgba(255,196,166,.02) 100%)',
+                  border: '1px solid rgba(255,255,255,.09)',
+                }}
               >
-                <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.8} strokeLinecap="round" style={{ display: 'block', flexShrink: 0 }}><path d="M12 5v14M5 12h14" /></svg>
-                Add Set
+                {/* Ex header */}
+                <div className="px-4 pt-[14px] pb-[10px] flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[17px] font-bold tracking-[-0.2px] truncate">{ex.name}</div>
+                    <div className="flex items-center gap-[5px] mt-[6px] flex-wrap">
+                      <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,110,45,.15)', color: 'rgba(255,160,100,.95)' }}>{ex.muscle}</span>
+                      <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,255,255,.07)', color: 'rgba(255,255,255,.5)' }}>{ex.equipment}</span>
+                      {(restTotal[String(ei)] || 0) > 0 && (
+                        <span className="text-[11px] font-semibold px-[9px] py-[3px] rounded-[20px] whitespace-nowrap" style={{ background: 'rgba(255,120,40,.1)', color: 'rgba(255,175,90,.8)' }}>
+                          💤 {fmt(restTotal[String(ei)])} rest
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-3">
+                    <div className="text-[10px] font-medium tracking-[.5px] mb-[3px]" style={{ color: 'rgba(255,255,255,.28)' }}>Best</div>
+                    <div className="text-[14px] font-bold tracking-[-0.2px]" style={{ color: 'rgba(255,160,90,.9)' }}>{ex.best}</div>
+                    <div className="text-[11px] font-medium mt-[3px]" style={{ color: 'rgba(255,255,255,.28)' }}>{ex.sets.filter(s => s.done).length} / {ex.sets.length} sets</div>
+                  </div>
+                </div>
+
+                {/* Table header */}
+                <div className="h-[1px] mx-[14px]" style={{ background: 'rgba(255,255,255,.07)' }} />
+                <div className="grid px-[14px] py-[6px] items-center text-[10px] font-medium tracking-[.5px]" style={{ gridTemplateColumns: '28px 1fr 56px 44px 44px 30px', gap: 4, color: 'rgba(255,255,255,.2)' }}>
+                  <div className="text-center">Set</div><div className="pl-[2px]">Prev</div><div className="text-center">Kg</div><div className="text-center">Reps</div><div className="text-center">Time</div><div />
+                </div>
+
+                {/* Sets */}
+                {ex.sets.map((set, si) => {
+                  const n      = String(++setNum)
+                  const key    = `${ei}-${si}`
+                  const timerRes  = setTimerResults[key]
+                  const isRunning = setTimerRunning === key
+                  const isFocused = focusedSet?.ei === ei && focusedSet?.si === si
+                  return (
+                    <div key={si}>
+                      <div
+                        className="grid px-[14px] py-[6px] items-center cursor-pointer"
+                        style={{ gridTemplateColumns: '28px 1fr 56px 44px 44px 30px', gap: 4, background: set.done ? 'rgba(255,110,45,.09)' : isFocused ? 'rgba(255,100,30,.06)' : '#1a1310' }}
+                        onClick={() => openSet(ei, si)}
+                      >
+                        <div className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[11px] font-bold"
+                          style={{ background: 'rgba(255,255,255,.07)', color: 'rgba(255,255,255,.5)', border: isFocused ? '1.5px solid rgba(255,140,60,.8)' : '1.5px solid transparent' }}>
+                          {n}
+                        </div>
+                        <div className="text-[12px] font-medium pl-[2px] truncate" style={{ color: 'rgba(255,255,255,.27)' }}>{set.prev}</div>
+                        <div className="text-[14px] font-bold text-center tabular-nums" style={{ color: set.done ? 'rgba(255,160,90,.9)' : 'rgba(255,255,255,.7)' }}>{set.weight}</div>
+                        <div className="text-[14px] font-bold text-center tabular-nums" style={{ color: set.done ? 'rgba(255,160,90,.9)' : 'rgba(255,255,255,.7)' }}>{set.reps}</div>
+                        <div className={`font-doto text-[11px] font-bold text-center leading-none${isRunning ? ' set-dot-pulse' : ''}`} style={{ color: 'rgba(255,160,80,.6)', letterSpacing: .8 }}>
+                          {timerRes !== undefined ? fmt(timerRes) : isRunning ? '●' : ''}
+                        </div>
+                        <div
+                          onClick={e => { e.stopPropagation(); toggleDone(ei, si) }}
+                          className="w-7 h-7 rounded-full flex items-center justify-center mx-auto flex-shrink-0 cursor-pointer"
+                          style={{ border: set.done ? '2px solid #ff7a35' : '1.5px solid rgba(255,255,255,.2)', background: set.done ? '#ff7a35' : 'transparent' }}
+                        >
+                          {set.done && <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="white" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M5 12l5 5L20 7" /></svg>}
+                        </div>
+                      </div>
+                      <div className="h-[1px] mx-3" style={{ background: 'rgba(255,255,255,.04)' }} />
+                    </div>
+                  )
+                })}
+
+                {/* Add set */}
+                <div
+                  onClick={() => addSet(ei)}
+                  className="px-4 py-[10px] pb-[13px] flex items-center gap-[6px] cursor-pointer text-[13px] font-semibold tracking-[.2px]"
+                  style={{ color: 'rgba(255,150,80,.6)' }}
+                >
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2.8} strokeLinecap="round" style={{ display: 'block', flexShrink: 0 }}><path d="M12 5v14M5 12h14" /></svg>
+                  Add Set
+                </div>
               </div>
             </div>
           )
@@ -280,9 +392,14 @@ export default function ActiveWorkoutPage() {
       </div>
 
       {/* FAB */}
+
       {!focusedSet && (
         <div className="absolute z-10" style={{ bottom: 98, left: '50%', transform: 'translateX(-50%)' }}>
-          <button className="cta-gradient flex items-center gap-2 px-7 py-[15px] rounded-[30px] border-none cursor-pointer text-[13px] font-bold tracking-[1.2px] text-white whitespace-nowrap" style={{ fontFamily: 'inherit' }}>
+          <button
+            onClick={() => setShowAddExercise(true)}
+            className="cta-gradient flex items-center gap-2 px-7 py-[15px] rounded-[30px] border-none cursor-pointer text-[13px] font-bold tracking-[1.2px] text-white whitespace-nowrap"
+            style={{ fontFamily: 'inherit' }}
+          >
             <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" style={{ display: 'block' }}><path d="M12 5v14M5 12h14" /></svg>
             ADD EXERCISE
           </button>
@@ -293,9 +410,15 @@ export default function ActiveWorkoutPage() {
 
       {/* Focused set panel */}
       {focusedSet && fs && (
+        <>
         <div
-          className="absolute bottom-0 left-0 right-0 z-[9] rounded-[26px_26px_0_0]"
-          style={{ background: 'linear-gradient(165deg,rgba(38,22,14,0.92) 0%,rgba(22,12,9,0.95) 55%,rgba(14,8,6,0.97) 100%)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderTop: '1px solid rgba(255,120,60,.2)', boxShadow: '0 -12px 40px -4px rgba(0,0,0,.5)' }}
+          className="absolute inset-0 z-[10]"
+          style={{ background: 'rgba(0,0,0,.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+          onClick={closeSet}
+        />
+        <div
+          className="absolute bottom-0 left-0 right-0 z-[11] rounded-[26px_26px_0_0]"
+          style={{ background: 'linear-gradient(165deg,#261610 0%,#160c09 55%,#0e0806 100%)', borderTop: '1px solid rgba(255,120,60,.2)', boxShadow: '0 -12px 40px -4px rgba(0,0,0,.5)' }}
         >
           <div className="px-[18px] pt-[10px]">
             <div className="w-8 h-[3px] rounded-[2px] mx-auto mb-3" style={{ background: 'rgba(255,255,255,.18)' }} />
@@ -305,14 +428,17 @@ export default function ActiveWorkoutPage() {
               <div className="flex-1 min-w-0 text-[14px] font-bold tracking-[-0.15px] truncate" style={{ color: 'rgba(255,255,255,.9)' }}>
                 {exercises[focusedSet.ei].name}
               </div>
-              <button onClick={() => navSet(-1)} className="w-[26px] h-[26px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0 border-none" style={{ background: 'rgba(255,255,255,.07)', opacity: focusedSet.si > 0 ? 1 : 0.22 }}>
-                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M15 18l-6-6 6-6" /></svg>
-              </button>
               <span className="text-[13px] font-bold whitespace-nowrap flex-shrink-0 tracking-[.2px]" style={{ color: 'rgba(255,160,80,.95)' }}>
                 SET {focusedSet.si + 1} / {exercises[focusedSet.ei].sets.length}
               </span>
-              <button onClick={() => navSet(1)} className="w-[26px] h-[26px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0 border-none" style={{ background: 'rgba(255,255,255,.07)', opacity: focusedSet.si < exercises[focusedSet.ei].sets.length - 1 ? 1 : 0.22 }}>
-                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M9 18l6-6-6-6" /></svg>
+              <button
+                onClick={() => { setDeleteConfirm(focusedSet.ei); closeSet() }}
+                className="w-[26px] h-[26px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0 border-none"
+                style={{ background: 'rgba(220,50,50,.12)', border: '1px solid rgba(220,60,60,.28)' }}
+              >
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="rgba(255,100,100,.8)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                </svg>
               </button>
               <button onClick={closeSet} className="w-[26px] h-[26px] rounded-full flex items-center justify-center cursor-pointer flex-shrink-0 border-none ml-[2px]" style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)' }}>
                 <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="rgba(255,255,255,.45)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -328,7 +454,7 @@ export default function ActiveWorkoutPage() {
                 >
                   {fsRunning ? fmt(setElapsedLive) : fsResult !== undefined ? fmt(fsResult) : '00:00'}
                 </div>
-                <div className="text-[10px] font-bold tracking-[.9px] uppercase mt-1" style={{ color: 'rgba(255,255,255,.22)' }}>SET TIMER</div>
+                <div className="text-[10px] font-medium tracking-[.5px] mt-1" style={{ color: 'rgba(255,255,255,.22)' }}>Set Timer</div>
               </div>
               <button
                 onClick={() => focusedSet && (fsRunning ? endSetTimer(focusedSet.ei, focusedSet.si) : startSetTimer(focusedSet.ei, focusedSet.si))}
@@ -344,17 +470,15 @@ export default function ActiveWorkoutPage() {
               </button>
             </div>
 
-            {/* Weight / Reps inputs */}
+            {/* Scroll pickers */}
             <div className="flex gap-[10px] mb-[14px]">
               {(['weight','reps'] as const).map(field => (
                 <div key={field} className="flex-1">
-                  <div className="text-[10px] font-bold tracking-[.9px] uppercase text-center mb-[5px]" style={{ color: 'rgba(255,255,255,.28)' }}>{field === 'weight' ? 'KG' : 'REPS'}</div>
-                  <input
-                    type="number"
-                    value={fs[field]}
-                    onChange={e => focusedSet && updateField(focusedSet.ei, focusedSet.si, field, e.target.value)}
-                    className="w-full h-[58px] rounded-[14px] text-center font-doto font-bold text-white"
-                    style={{ fontSize: 30, letterSpacing: 2, border: '1px solid rgba(255,255,255,.11)', background: 'rgba(255,255,255,.07)', fontFamily: 'var(--font-doto)' }}
+                  <div className="text-[10px] font-medium tracking-[.5px] text-center mb-[5px]" style={{ color: 'rgba(255,255,255,.28)' }}>{field === 'weight' ? 'Kg' : 'Reps'}</div>
+                  <ScrollPicker
+                    values={field === 'weight' ? WEIGHT_VALUES : REPS_VALUES}
+                    selected={fs[field]}
+                    onChange={v => focusedSet && updateField(focusedSet.ei, focusedSet.si, field, v)}
                   />
                 </div>
               ))}
@@ -366,37 +490,91 @@ export default function ActiveWorkoutPage() {
             <div className="flex items-center gap-2 mb-[14px]">
               <button
                 onClick={() => focusedSet && addRest(focusedSet.ei)}
-                className="flex-1 h-[46px] rounded-[14px] cursor-pointer text-[14px] font-bold tracking-[.2px] border-none"
-                style={{ fontFamily: 'inherit', color: 'rgba(255,180,100,.92)', background: 'rgba(255,100,30,.09)', border: '1px solid rgba(255,130,40,.22)' }}
+                className="h-[46px] rounded-[14px] cursor-pointer text-[14px] font-bold tracking-[.2px] border-none"
+                style={{ flex: '1 1 0', minWidth: 0, fontFamily: 'inherit', color: 'rgba(255,180,100,.92)', background: 'rgba(255,100,30,.09)', border: '1px solid rgba(255,130,40,.22)' }}
               >
-                {fsRestRun && fsRestRem > 0 ? `💤  ${fmt(fsRestRem)}` : '💤  REST +45s'}
+                <span className="tabular-nums">{fsRestRun && fsRestRem > 0 ? `💤  ${fmt(fsRestRem)}` : '💤  REST +45s'}</span>
               </button>
-              {fsRestRun && fsRestRem > 0 && (
-                <button onClick={() => focusedSet && cancelRest(focusedSet.ei)} className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0 border-none cursor-pointer" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)' }}>
-                  <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="rgba(255,255,255,.45)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M18 6L6 18M6 6l12 12" /></svg>
-                </button>
-              )}
+              <button
+                onClick={() => focusedSet && cancelRest(focusedSet.ei)}
+                className="w-11 h-11 rounded-[12px] flex items-center justify-center flex-shrink-0 border-none cursor-pointer"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(220,40,40,.18), rgba(180,20,20,.08))',
+                  border: '1px solid rgba(220,60,60,.45)',
+                  opacity: fsRestRun && fsRestRem > 0 ? 1 : 0,
+                  pointerEvents: fsRestRun && fsRestRem > 0 ? 'auto' : 'none',
+                }}
+              >
+                <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="rgba(255,100,100,.9)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
               <div className="text-[11px] font-medium whitespace-nowrap text-right flex-shrink-0 min-w-[54px]" style={{ color: 'rgba(255,255,255,.3)' }}>
-                {fsRestTot > 0 ? `${fmt(fsRestTot)} total` : '—'}
+                <span className="tabular-nums">{fsRestTot > 0 ? `${fmt(fsRestTot)} total` : '—'}</span>
               </div>
             </div>
 
-            <div className="h-[1px] mb-3" style={{ background: 'rgba(255,255,255,.06)' }} />
-
-            {/* Mark done */}
-            <div
-              onClick={() => focusedSet && toggleDone(focusedSet.ei, focusedSet.si)}
-              className="flex items-center gap-[10px] cursor-pointer pb-[100px]"
-            >
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ border: fs.done ? '2px solid #ff7a35' : '1.5px solid rgba(255,255,255,.22)', background: fs.done ? '#ff7a35' : 'transparent' }}>
-                {fs.done && <svg viewBox="0 0 24 24" width={11} height={11} fill="none" stroke="white" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M5 12l5 5L20 7" /></svg>}
-              </div>
-              <div className="text-[13px] font-semibold tracking-[.1px]" style={{ color: fs.done ? 'rgba(255,170,90,.9)' : 'rgba(255,255,255,.45)' }}>
-                {fs.done ? 'Set Marked Done ✓' : 'Mark Set Done'}
-              </div>
-            </div>
+            <div className="h-[1px] mb-[18px]" style={{ background: 'rgba(255,255,255,.06)' }} />
           </div>
         </div>
+        </>
+      )}
+
+      {/* Delete confirm */}
+      {deleteConfirm !== null && (
+        <>
+          <div className="absolute inset-0 z-20" style={{ background: 'rgba(0,0,0,.68)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setDeleteConfirm(null)} />
+          <div className="absolute bottom-0 left-0 right-0 z-[21] rounded-[34px_34px_0_0] px-[22px] pb-[40px] pt-[18px]" style={{ background: 'linear-gradient(170deg,#241510,#170d0a)', borderTop: '1px solid rgba(255,255,255,.11)' }}>
+            <div className="w-9 h-1 rounded-[2px] mx-auto mb-5" style={{ background: 'rgba(255,255,255,.15)' }} />
+            <div className="text-[17px] font-bold mb-1">Remove Exercise?</div>
+            <div className="text-[13px] font-normal mb-6" style={{ color: 'rgba(255,255,255,.45)' }}>
+              {exercises[deleteConfirm]?.name} will be removed from this session.
+            </div>
+            <button
+              onClick={() => removeExercise(deleteConfirm)}
+              className="w-full h-[52px] rounded-[26px] border-none cursor-pointer text-[14px] font-bold tracking-[.5px] text-white mb-[10px]"
+              style={{ background: 'linear-gradient(90deg,#c82020,#9e1414)', boxShadow: '0 6px 18px -6px rgba(180,20,20,.55)', fontFamily: 'inherit' }}
+            >Remove</button>
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="w-full h-[46px] rounded-[26px] cursor-pointer text-[14px] font-semibold bg-transparent"
+              style={{ border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.42)', fontFamily: 'inherit' }}
+            >Cancel</button>
+          </div>
+        </>
+      )}
+
+      {/* Add exercise sheet */}
+      {showAddExercise && (
+        <>
+          <div className="absolute inset-0 z-20" style={{ background: 'rgba(0,0,0,.68)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setShowAddExercise(false)} />
+          <div className="absolute bottom-0 left-0 right-0 z-[21] rounded-[34px_34px_0_0] pt-[18px]" style={{ background: 'linear-gradient(170deg,#241510,#170d0a)', borderTop: '1px solid rgba(255,255,255,.11)', maxHeight: '72vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="w-9 h-1 rounded-[2px] mx-auto mb-4" style={{ background: 'rgba(255,255,255,.15)' }} />
+            <div className="flex items-center justify-between px-[22px] mb-3">
+              <div className="text-[17px] font-bold">Add Exercise</div>
+              <button onClick={() => setShowAddExercise(false)} className="w-[28px] h-[28px] rounded-full flex items-center justify-center border-none cursor-pointer" style={{ background: 'rgba(255,255,255,.07)' }}>
+                <svg viewBox="0 0 24 24" width={12} height={12} fill="none" stroke="rgba(255,255,255,.5)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block' }}><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto pb-10 px-[14px]" style={{ flex: 1 }}>
+              {EXERCISE_LIBRARY.map((ex) => (
+                <div
+                  key={ex.name}
+                  onClick={() => addExercise(ex)}
+                  className="flex items-center justify-between px-4 py-[13px] rounded-[16px] mb-[6px] cursor-pointer"
+                  style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)' }}
+                >
+                  <div>
+                    <div className="text-[15px] font-semibold tracking-[-0.1px]">{ex.name}</div>
+                    <div className="flex items-center gap-[5px] mt-[4px]">
+                      <span className="text-[11px] font-medium px-[8px] py-[2px] rounded-[20px]" style={{ background: 'rgba(255,110,45,.12)', color: 'rgba(255,160,100,.9)' }}>{ex.muscle}</span>
+                      <span className="text-[11px] font-medium px-[8px] py-[2px] rounded-[20px]" style={{ background: 'rgba(255,255,255,.06)', color: 'rgba(255,255,255,.45)' }}>{ex.equipment}</span>
+                    </div>
+                  </div>
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="rgba(255,150,80,.6)" strokeWidth={2.5} strokeLinecap="round" style={{ display: 'block', flexShrink: 0 }}><path d="M12 5v14M5 12h14" /></svg>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Finish modal */}
@@ -405,21 +583,21 @@ export default function ActiveWorkoutPage() {
           <div className="absolute inset-0 z-20" style={{ background: 'rgba(0,0,0,.68)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setShowFinish(false)} />
           <div className="absolute bottom-0 left-0 right-0 z-[21] rounded-[34px_34px_0_0] px-[22px] pb-[46px] pt-[18px]" style={{ background: 'linear-gradient(170deg,#241510,#170d0a)', borderTop: '1px solid rgba(255,255,255,.11)' }}>
             <div className="w-9 h-1 rounded-[2px] mx-auto mb-5" style={{ background: 'rgba(255,255,255,.15)' }} />
-            <div className="text-[21px] font-extrabold tracking-[-0.4px] mb-4">Finish Workout</div>
+            <div className="text-[21px] font-bold tracking-[-0.4px] mb-4">Finish Workout</div>
 
             <div className="flex gap-[10px] mb-4">
               <div className="flex-1 rounded-[16px] p-[13px]" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' }}>
-                <div className="text-[10px] font-semibold uppercase tracking-[.8px] mb-[5px]" style={{ color: 'rgba(255,255,255,.35)' }}>Duration</div>
+                <div className="text-[10px] font-medium tracking-[.5px] mb-[5px]" style={{ color: 'rgba(255,255,255,.35)' }}>Duration</div>
                 <div className="font-doto text-[26px] font-bold tracking-[3px]">{fmt(sessionSecs)}</div>
               </div>
               <div className="flex-1 rounded-[16px] p-[13px]" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' }}>
-                <div className="text-[10px] font-semibold uppercase tracking-[.8px] mb-[5px]" style={{ color: 'rgba(255,255,255,.35)' }}>Sets Done</div>
+                <div className="text-[10px] font-medium tracking-[.5px] mb-[5px]" style={{ color: 'rgba(255,255,255,.35)' }}>Sets Done</div>
                 <div className="text-[22px] font-bold mt-[2px]">{completedSets} / {totalSets}</div>
               </div>
             </div>
 
             <div className="mb-4">
-              <div className="text-[10px] font-bold uppercase tracking-[.8px] mb-[9px]" style={{ color: 'rgba(255,255,255,.35)' }}>Energy Level</div>
+              <div className="text-[10px] font-medium tracking-[.5px] mb-[9px]" style={{ color: 'rgba(255,255,255,.35)' }}>Energy Level</div>
               <div className="flex gap-[7px]">
                 {['😴','😑','😊','💪','🔥'].map((emoji, i) => (
                   <div
@@ -435,7 +613,7 @@ export default function ActiveWorkoutPage() {
             </div>
 
             <div className="mb-5">
-              <div className="text-[10px] font-bold uppercase tracking-[.8px] mb-2" style={{ color: 'rgba(255,255,255,.35)' }}>Session Notes</div>
+              <div className="text-[10px] font-medium tracking-[.5px] mb-2" style={{ color: 'rgba(255,255,255,.35)' }}>Session Notes</div>
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

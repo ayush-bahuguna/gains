@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { StatusBar } from '@/components/StatusBar'
 import { BottomNav } from '@/components/BottomNav'
 
 const WORKOUTS = [
@@ -44,8 +43,6 @@ export default function HistoryPage() {
 
   return (
     <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
-      <StatusBar />
-
       {/* Header */}
       <div className="relative z-10 flex-none flex items-center justify-between px-[22px] pt-[14px] pb-0">
         <h1 className="text-[22px] font-extrabold tracking-[-0.4px] m-0">History</h1>
