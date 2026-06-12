@@ -7,15 +7,21 @@ import { getBarData, getExProgression, getHomeStats, type Period } from '@/lib/d
 type ExName = 'Bench Press' | 'Squat' | 'Overhead Press' | 'Deadlift' | 'Pull-up'
 
 type BarItem   = { label: string; value: number }
-type BarData   = { vol: BarItem[]; freq: BarItem[] }
+type BarData   = { vol: BarItem[]; freq: BarItem[]; totalSecs: number }
 type ExPd      = { data: number[]; labels: string[] }
 
 const EXERCISES = ['Bench Press','Squat','Overhead Press','Deadlift','Pull-up'] as ExName[]
 
 function emptyBars(period: Period): BarData {
-  if (period === 'week')  return { vol: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(l => ({ label:l, value:0 })), freq: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(l => ({ label:l, value:0 })) }
-  if (period === 'month') return { vol: ['W1','W2','W3','W4','W5'].map(l => ({ label:l, value:0 })), freq: ['W1','W2','W3','W4','W5'].map(l => ({ label:l, value:0 })) }
-  return { vol: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(l => ({ label:l, value:0 })), freq: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(l => ({ label:l, value:0 })) }
+  if (period === 'week')  return { vol: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(l => ({ label:l, value:0 })), freq: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(l => ({ label:l, value:0 })), totalSecs: 0 }
+  if (period === 'month') return { vol: ['W1','W2','W3','W4','W5'].map(l => ({ label:l, value:0 })), freq: ['W1','W2','W3','W4','W5'].map(l => ({ label:l, value:0 })), totalSecs: 0 }
+  return { vol: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(l => ({ label:l, value:0 })), freq: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(l => ({ label:l, value:0 })), totalSecs: 0 }
+}
+
+function fmtDuration(secs: number): string {
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}` : `${m}m`
 }
 
 function emptyExPd(period: Period): ExPd {
@@ -180,6 +186,10 @@ export default function AnalyticsPage() {
   // Compute summary stats from bars
   const totalWorkouts = bars.freq.reduce((a, b) => a + b.value, 0)
   const totalVolume   = bars.vol.reduce((a, b) => a + b.value, 0)
+  const totalSecs     = bars.totalSecs
+  const totalHours    = (totalSecs / 3600).toFixed(1)
+  const avgSecs       = totalWorkouts > 0 ? totalSecs / totalWorkouts : 0
+  const avgDuration   = fmtDuration(avgSecs)
 
   // Compute line chart scaling from actual data
   const nonZero    = exPd.data.filter(v => v > 0)
@@ -220,13 +230,13 @@ export default function AnalyticsPage() {
         {/* Summary cards */}
         <div className="grid gap-[10px] mb-[18px]" style={{ gridTemplateColumns: '1fr 1fr' }}>
           {[
-            { label:'Workouts',    value: String(totalWorkouts),  sub: `${period === 'week' ? 'this week' : period === 'month' ? 'this month' : 'this year'}`, warm: false },
-            { label:'Volume',      value: fmtVol(totalVolume),    sub: 'kg total',                                                                               warm: false },
-            { label:'Day Streak',  value: String(streak),         sub: 'days in a row',                                                                          warm: true  },
-            { label:'Exercises',   value: selectedEx.split(' ')[0], sub: 'selected',                                                                             warm: false },
+            { label: 'WORKOUTS',     value: String(totalWorkouts), sub: 'total sessions', warm: false },
+            { label: 'TRAINING',     value: totalHours,            sub: 'total hours',    warm: false },
+            { label: 'AVG DURATION', value: avgDuration,           sub: 'per session',    warm: false },
+            { label: 'STREAK',       value: String(streak),        sub: 'day streak',     warm: true  },
           ].map(card => (
             <div key={card.label} className="rounded-[20px] p-4" style={{ background: card.warm ? 'linear-gradient(157deg,rgba(255,150,60,.14),rgba(200,80,20,.05))' : 'linear-gradient(157deg,rgba(255,238,224,.12),rgba(255,210,180,.04))', border: card.warm ? '1px solid rgba(255,140,60,.2)' : '1px solid rgba(255,255,255,.09)' }}>
-              <div className="text-[10px] font-medium tracking-[.5px] mb-2" style={{ color: card.warm ? 'rgba(255,160,80,.5)' : 'rgba(255,255,255,.32)' }}>{card.label}</div>
+              <div className="text-[10px] font-bold uppercase tracking-[1px] mb-2" style={{ color: card.warm ? 'rgba(255,160,80,.5)' : 'rgba(255,255,255,.32)' }}>{card.label}</div>
               <div className="font-doto text-[36px] font-bold leading-none" style={{ letterSpacing: 3, color: card.warm ? 'rgba(255,200,120,.95)' : '#fff' }}>{card.value}</div>
               <div className="text-[11px] font-medium mt-[5px]" style={{ color: card.warm ? 'rgba(255,160,80,.4)' : 'rgba(255,255,255,.32)' }}>{card.sub}</div>
             </div>

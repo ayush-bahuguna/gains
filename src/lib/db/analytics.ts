@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase'
 
 type BarItem = { label: string; value: number }
-type BarData = { vol: BarItem[]; freq: BarItem[] }
+type BarData = { vol: BarItem[]; freq: BarItem[]; totalSecs: number }
 
 // ── date helpers ────────────────────────────────────────────────────────────
 
@@ -76,9 +76,11 @@ export async function getBarData(userId: string, period: Period): Promise<BarDat
       freq[dow]++
       vol[dow] += sessionVolume(s)
     })
+    const totalSecs = sessions.reduce((a, s) => a + (s.duration_secs ?? 0), 0)
     return {
       vol:  LABELS.map((label, i) => ({ label, value: Math.round(vol[i]) })),
       freq: LABELS.map((label, i) => ({ label, value: freq[i] })),
+      totalSecs,
     }
   }
 
@@ -95,9 +97,11 @@ export async function getBarData(userId: string, period: Period): Promise<BarDat
       freq[w]++
       vol[w] += sessionVolume(s)
     })
+    const totalSecs = sessions.reduce((a, s) => a + (s.duration_secs ?? 0), 0)
     return {
       vol:  LABELS.map((label, i) => ({ label, value: Math.round(vol[i]) })),
       freq: LABELS.map((label, i) => ({ label, value: freq[i] })),
+      totalSecs,
     }
   }
 
@@ -114,9 +118,11 @@ export async function getBarData(userId: string, period: Period): Promise<BarDat
     freq[m]++
     vol[m] += sessionVolume(s)
   })
+  const totalSecs = sessions.reduce((a, s) => a + (s.duration_secs ?? 0), 0)
   return {
     vol:  LABELS.map((label, i) => ({ label, value: Math.round(vol[i]) })),
     freq: LABELS.map((label, i) => ({ label, value: freq[i] })),
+    totalSecs,
   }
 }
 
