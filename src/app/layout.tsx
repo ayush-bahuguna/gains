@@ -13,6 +13,10 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: 'Gains',
   description: 'Your personal fitness tracker',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/apple-touch-icon.svg',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent' },
 }
 
