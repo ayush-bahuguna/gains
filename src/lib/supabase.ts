@@ -11,6 +11,13 @@ export function createClient(): SupabaseClient<any> {
   if (!url || !key) throw new Error('Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createClient: _c } = require('@supabase/supabase-js')
-  _client = _c(url, key) as SupabaseClient<any>
+  _client = _c(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'gains-auth',
+    },
+  }) as SupabaseClient<any>
   return _client!
 }
