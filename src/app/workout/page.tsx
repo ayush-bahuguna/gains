@@ -203,7 +203,7 @@ export default function WorkoutPage() {
   }
 
   return (
-    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
+    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
 
       {/* ── Sticky top ── */}
       <div className="relative z-10 flex-none">

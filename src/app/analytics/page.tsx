@@ -207,7 +207,7 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
+    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* Header */}
       <div className="relative z-10 flex-none flex items-center justify-between px-[22px] pt-[14px] pb-0">
         <h1 className="text-[22px] font-bold tracking-[-0.4px] m-0">Analytics</h1>

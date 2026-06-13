@@ -350,7 +350,7 @@ export default function ActiveWorkoutPage() {
   const fsRestRun = focusedSet ? !!restRunning[fsEis] : false
 
   return (
-    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
+    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* Workout header */}
       <div className="relative z-10 flex-none px-5 pt-[10px]">
         <div className="flex items-center gap-2">

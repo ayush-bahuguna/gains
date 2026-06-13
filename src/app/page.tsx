@@ -41,7 +41,7 @@ export default function HomePage() {
   const volSub     = weekVol >= 1000 ? 'k kg lifted' : 'kg lifted'
 
   return (
-    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden">
+    <div className="app-bg app-glow fixed inset-0 flex flex-col overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div
         className="relative z-10 flex-1 overflow-y-auto overflow-x-hidden"
         style={{ padding: '0 22px', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
