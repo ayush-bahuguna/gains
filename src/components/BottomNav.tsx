@@ -30,11 +30,11 @@ export function BottomNav({ active }: { active: Tab }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-10"
-      style={{ height: 'calc(66px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      style={{ height: 'calc(70px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div
         className="nav-glass absolute left-1/2 -translate-x-1/2 flex items-center px-2 rounded-[33px]"
-        style={{ bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', height: 66, width: 'max-content' }}
+        style={{ bottom: 'calc(4px + env(safe-area-inset-bottom, 0px))', height: 66, width: 'max-content' }}
       >
         {TABS.map((tab) => {
           const isActive = active === tab.id
