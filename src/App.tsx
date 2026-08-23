@@ -5,6 +5,7 @@ import { ActiveSession } from './screens/ActiveSession'
 import { HistoryList } from './screens/HistoryList'
 import { JournalHome } from './screens/JournalHome'
 import { Me } from './screens/Me'
+import { SessionSummary } from './screens/SessionSummary'
 import { TemplatesList } from './screens/TemplatesList'
 import { ButtonsCheck } from './screens/dev/ButtonsCheck'
 import { IconsCheck } from './screens/dev/IconsCheck'
@@ -58,6 +59,14 @@ function App() {
           element={
             <RequireAuth>
               <ActiveSession />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/session/:id/summary"
+          element={
+            <RequireAuth>
+              <SessionSummary />
             </RequireAuth>
           }
         />
