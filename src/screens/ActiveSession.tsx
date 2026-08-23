@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { ExerciseBlock } from '../components/ExerciseBlock'
@@ -6,11 +6,15 @@ import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil } from '../components/icons'
 import { LiveDot } from '../components/LiveDot'
 import { Marquee } from '../components/Marquee'
+import { Modal } from '../components/Modal'
 import { NotesBox } from '../components/NotesBox'
 import { SearchInput } from '../components/SearchInput'
 import type { SetRowData } from '../components/SetTable'
 import { TextInput } from '../components/TextInput'
+import { MicButton, VoicePanel, type VoicePanelState } from '../components/VoiceListeningPanel'
+import { useSpeechRecognition } from '../lib/useSpeechRecognition'
 import { supabase } from '../lib/supabase'
+import { matchExerciseName, parseVoiceCommand, type VoiceAction } from '../lib/voiceParser'
 
 type SessionData = {
   id: string
@@ -58,6 +62,12 @@ export function ActiveSession() {
   const [notesDraft, setNotesDraft] = useState('')
   const [now, setNow] = useState(() => Date.now())
   const [finishing, setFinishing] = useState(false)
+
+  const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null)
+  const [voiceOpen, setVoiceOpen] = useState(false)
+  const [voiceState, setVoiceState] = useState<VoicePanelState>('idle')
+  const [voiceMessage, setVoiceMessage] = useState<string | undefined>(undefined)
+  const undoStackRef = useRef<Array<() => Promise<void> | void>>([])
 
   useEffect(() => {
     if (!id) return
@@ -123,60 +133,76 @@ export function ActiveSession() {
       .slice(0, 6)
   }, [query, definitions])
 
-  async function addExercise(def: ExerciseDefinition) {
-    if (!id) return
+  async function insertExercise(name: string, exerciseDbId: string | null): Promise<ExerciseData | null> {
+    if (!id) return null
     const { data, error } = await supabase
       .from('exercises')
-      .insert({ session_id: id, exercise_db_id: def.id, name: def.name, position: exercises.length })
+      .insert({ session_id: id, exercise_db_id: exerciseDbId, name, position: exercises.length })
       .select()
       .single()
-    if (error || !data) return
-    setExercises((prev) => [...prev, { id: data.id, name: data.name, position: data.position, sets: [] }])
+    if (error || !data) return null
+    const newEx: ExerciseData = { id: data.id, name: data.name, position: data.position, sets: [] }
+    setExercises((prev) => [...prev, newEx])
+    return newEx
+  }
+
+  async function insertSetAndAttach(exerciseId: string, weight: number, reps: number): Promise<SetRowData | null> {
+    const exercise = exercises.find((e) => e.id === exerciseId)
+    if (!exercise) return null
+    const setNumber = exercise.sets.length + 1
+    const { data, error } = await supabase
+      .from('sets')
+      .insert({ exercise_id: exerciseId, set_number: setNumber, weight, reps })
+      .select()
+      .single()
+    if (error || !data) return null
+    const newSet: SetRowData = { id: data.id, setNumber: data.set_number, weight: data.weight, reps: data.reps }
+    setExercises((prev) => prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets: [...ex.sets, newSet] } : ex)))
+    return newSet
+  }
+
+  function updateSetById(exerciseId: string, setId: string, field: 'weight' | 'reps', value: number) {
+    setExercises((prev) =>
+      prev.map((ex) =>
+        ex.id === exerciseId ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)) } : ex,
+      ),
+    )
+    supabase
+      .from('sets')
+      .update({ [field]: value })
+      .eq('id', setId)
+      .then()
+  }
+
+  async function deleteSetById(exerciseId: string, setId: string) {
+    setExercises((prev) => prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) } : ex)))
+    await supabase.from('sets').delete().eq('id', setId)
+  }
+
+  async function deleteExerciseById(exerciseId: string) {
+    setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId))
+    await supabase.from('exercises').delete().eq('id', exerciseId)
+  }
+
+  async function addExercise(def: ExerciseDefinition) {
+    await insertExercise(def.name, def.id)
     setQuery('')
   }
 
   async function addSet(exerciseIndex: number) {
-    const exercise = exercises[exerciseIndex]
-    const setNumber = exercise.sets.length + 1
-    const { data, error } = await supabase
-      .from('sets')
-      .insert({ exercise_id: exercise.id, set_number: setNumber, weight: 0, reps: 0 })
-      .select()
-      .single()
-    if (error || !data) return
-    setExercises((prev) =>
-      prev.map((ex, i) =>
-        i === exerciseIndex
-          ? { ...ex, sets: [...ex.sets, { id: data.id, setNumber: data.set_number, weight: data.weight, reps: data.reps }] }
-          : ex,
-      ),
-    )
+    await insertSetAndAttach(exercises[exerciseIndex].id, 0, 0)
   }
 
   function updateSet(exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) {
-    const set = exercises[exerciseIndex].sets[setIndex]
-    setExercises((prev) =>
-      prev.map((ex, i) =>
-        i === exerciseIndex
-          ? { ...ex, sets: ex.sets.map((s, j) => (j === setIndex ? { ...s, [field]: value } : s)) }
-          : ex,
-      ),
-    )
-    if (set.id) {
-      supabase
-        .from('sets')
-        .update({ [field]: value })
-        .eq('id', set.id)
-        .then()
-    }
+    const exercise = exercises[exerciseIndex]
+    const set = exercise.sets[setIndex]
+    if (set.id) updateSetById(exercise.id, set.id, field, value)
   }
 
   async function deleteSet(exerciseIndex: number, setIndex: number) {
-    const set = exercises[exerciseIndex].sets[setIndex]
-    setExercises((prev) =>
-      prev.map((ex, i) => (i === exerciseIndex ? { ...ex, sets: ex.sets.filter((_, j) => j !== setIndex) } : ex)),
-    )
-    if (set.id) await supabase.from('sets').delete().eq('id', set.id)
+    const exercise = exercises[exerciseIndex]
+    const set = exercise.sets[setIndex]
+    if (set.id) await deleteSetById(exercise.id, set.id)
   }
 
   async function renameExercise(exerciseIndex: number, newName: string) {
@@ -186,9 +212,167 @@ export function ActiveSession() {
   }
 
   async function deleteExercise(exerciseIndex: number) {
-    const exercise = exercises[exerciseIndex]
-    setExercises((prev) => prev.filter((_, i) => i !== exerciseIndex))
-    await supabase.from('exercises').delete().eq('id', exercise.id)
+    await deleteExerciseById(exercises[exerciseIndex].id)
+  }
+
+  async function resolveExercise(name: string): Promise<{ exercise: ExerciseData; created: boolean } | null> {
+    const existing = matchExerciseName(name, exercises, 0.6)
+    if (existing) return { exercise: existing, created: false }
+    const def = matchExerciseName(name, definitions, 0.55)
+    const created = await insertExercise(
+      def ? def.name : name.replace(/\b\w/g, (c) => c.toUpperCase()),
+      def ? def.id : null,
+    )
+    if (!created) return null
+    return { exercise: created, created: true }
+  }
+
+  async function runVoiceCommand(action: VoiceAction): Promise<{ ok: boolean; message?: string }> {
+    switch (action.type) {
+      case 'undo': {
+        const undo = undoStackRef.current.pop()
+        if (!undo) return { ok: false, message: 'Nothing to undo' }
+        await undo()
+        return { ok: true, message: 'Undone' }
+      }
+
+      case 'finishWorkout': {
+        finishSession()
+        return { ok: true, message: 'Finishing...' }
+      }
+
+      case 'deleteLastSet': {
+        const exercise = exercises.find((e) => e.id === currentExerciseId)
+        if (!exercise || exercise.sets.length === 0) return { ok: false, message: 'No set to delete' }
+        const removed = exercise.sets[exercise.sets.length - 1]
+        if (!removed.id) return { ok: false, message: 'No set to delete' }
+        await deleteSetById(exercise.id, removed.id)
+        undoStackRef.current.push(async () => {
+          await insertSetAndAttach(exercise.id, removed.weight, removed.reps)
+        })
+        return { ok: true, message: 'Set deleted' }
+      }
+
+      case 'deleteExercise': {
+        const match = matchExerciseName(action.name, exercises)
+        if (!match) return { ok: false, message: `Couldn't find "${action.name}"` }
+        await deleteExerciseById(match.id)
+        if (currentExerciseId === match.id) setCurrentExerciseId(null)
+        undoStackRef.current.push(async () => {
+          const restored = await insertExercise(match.name, null)
+          if (!restored) return
+          for (const s of match.sets) {
+            await insertSetAndAttach(restored.id, s.weight, s.reps)
+          }
+        })
+        return { ok: true, message: `Deleted ${match.name}` }
+      }
+
+      case 'increaseWeight': {
+        const exercise = exercises.find((e) => e.id === currentExerciseId)
+        if (!exercise || exercise.sets.length === 0) return { ok: false, message: 'No set yet' }
+        const last = exercise.sets[exercise.sets.length - 1]
+        if (!last.id) return { ok: false, message: 'No set yet' }
+        const prevWeight = last.weight
+        updateSetById(exercise.id, last.id, 'weight', prevWeight + action.amount)
+        undoStackRef.current.push(() => updateSetById(exercise.id, last.id!, 'weight', prevWeight))
+        return { ok: true, message: `+${action.amount}` }
+      }
+
+      case 'duplicateSet': {
+        const exercise = exercises.find((e) => e.id === currentExerciseId)
+        const last = exercise?.sets[exercise.sets.length - 1]
+        if (!exercise || !last) return { ok: false, message: 'No previous set' }
+        const newSet = await insertSetAndAttach(exercise.id, last.weight, last.reps)
+        if (!newSet?.id) return { ok: false, message: 'Could not add set' }
+        undoStackRef.current.push(async () => deleteSetById(exercise.id, newSet.id!))
+        return { ok: true, message: 'Set added' }
+      }
+
+      case 'sameWeightReps': {
+        const exercise = exercises.find((e) => e.id === currentExerciseId)
+        const last = exercise?.sets[exercise.sets.length - 1]
+        if (!exercise || !last) return { ok: false, message: 'No previous set' }
+        const newSet = await insertSetAndAttach(exercise.id, last.weight, action.reps)
+        if (!newSet?.id) return { ok: false, message: 'Could not add set' }
+        undoStackRef.current.push(async () => deleteSetById(exercise.id, newSet.id!))
+        return { ok: true, message: 'Set added' }
+      }
+
+      case 'appendSet': {
+        const exercise = exercises.find((e) => e.id === currentExerciseId)
+        if (!exercise) return { ok: false, message: 'No exercise selected' }
+        const newSet = await insertSetAndAttach(exercise.id, action.weight, action.reps)
+        if (!newSet?.id) return { ok: false, message: 'Could not add set' }
+        undoStackRef.current.push(async () => deleteSetById(exercise.id, newSet.id!))
+        return { ok: true, message: 'Set added' }
+      }
+
+      case 'selectExercise': {
+        const resolved = await resolveExercise(action.name)
+        if (!resolved) return { ok: false, message: 'Could not add exercise' }
+        setCurrentExerciseId(resolved.exercise.id)
+        if (resolved.created) {
+          undoStackRef.current.push(async () => {
+            await deleteExerciseById(resolved.exercise.id)
+            setCurrentExerciseId(null)
+          })
+        }
+        return { ok: true, message: resolved.exercise.name }
+      }
+
+      case 'createOrSelectExerciseWithSet': {
+        const resolved = await resolveExercise(action.name)
+        if (!resolved) return { ok: false, message: 'Could not add exercise' }
+        setCurrentExerciseId(resolved.exercise.id)
+        const newSet = await insertSetAndAttach(resolved.exercise.id, action.weight, action.reps)
+        if (resolved.created) {
+          undoStackRef.current.push(async () => {
+            await deleteExerciseById(resolved.exercise.id)
+            setCurrentExerciseId(null)
+          })
+        } else if (newSet?.id) {
+          undoStackRef.current.push(async () => deleteSetById(resolved.exercise.id, newSet.id!))
+        }
+        return { ok: true, message: `${resolved.exercise.name} logged` }
+      }
+
+      default:
+        return { ok: false, message: "Didn't understand that" }
+    }
+  }
+
+  const { start: startListening, supported: voiceSupported } = useSpeechRecognition({
+    onResult: async (transcript) => {
+      setVoiceState('processing')
+      const action = parseVoiceCommand(transcript)
+      if (!action) {
+        setVoiceState('error')
+        setVoiceMessage("Didn't catch that")
+        return
+      }
+      const result = await runVoiceCommand(action)
+      setVoiceState(result.ok ? 'success' : 'error')
+      setVoiceMessage(result.message)
+    },
+    onError: (message) => {
+      setVoiceState('error')
+      setVoiceMessage(message)
+    },
+  })
+
+  function openVoicePanel() {
+    setVoiceOpen(true)
+    setVoiceState('idle')
+    setVoiceMessage(undefined)
+  }
+
+  function handleMicClick() {
+    if (voiceState === 'idle' || voiceState === 'error' || voiceState === 'success') {
+      setVoiceState('listening')
+      setVoiceMessage(undefined)
+      startListening()
+    }
   }
 
   function submitSessionRename() {
@@ -324,6 +508,27 @@ export function ActiveSession() {
         onChange={(e) => setNotesDraft(e.target.value)}
         onBlur={commitNotes}
       />
+
+      {!session.end_time && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto max-w-[480px]">
+          <div
+            className="pointer-events-auto absolute bottom-6 right-4"
+            style={{ marginBottom: 'calc(6.5rem + env(safe-area-inset-bottom))' }}
+          >
+            <MicButton onClick={openVoicePanel} />
+          </div>
+        </div>
+      )}
+
+      <Modal isOpen={voiceOpen} onClose={() => setVoiceOpen(false)} title="Voice Input">
+        {voiceSupported ? (
+          <VoicePanel state={voiceState} onMicClick={handleMicClick} message={voiceMessage} />
+        ) : (
+          <p className="p-6 text-center text-sm text-graphite">
+            Voice input isn't supported in this browser. Try Chrome or Safari on a recent iOS/Android version.
+          </p>
+        )}
+      </Modal>
     </div>
   )
 }

@@ -51,12 +51,13 @@ function ListeningMicButton({ onClick }: { onClick?: () => void }) {
   )
 }
 
-export type MicButtonState = 'idle' | 'processing' | 'error'
+export type MicButtonState = 'idle' | 'processing' | 'error' | 'success'
 
 const micStateStyle: Record<MicButtonState, { fill: string; stroke: string; textClass: string; dash?: number[] }> = {
   idle: { fill: 'var(--color-paper)', stroke: 'var(--color-ink)', textClass: 'text-ink' },
   processing: { fill: 'var(--color-paper)', stroke: 'var(--color-graphite)', textClass: 'text-graphite', dash: [4, 4] },
   error: { fill: 'var(--color-coral)', stroke: 'var(--color-coral)', textClass: 'text-ink' },
+  success: { fill: 'var(--color-sage)', stroke: 'var(--color-sage)', textClass: 'text-ink' },
 }
 
 // The resting/compact mic affordance shown elsewhere in the app (e.g. the
@@ -92,22 +93,25 @@ export function MicButton({
   )
 }
 
-export type VoicePanelState = 'idle' | 'listening' | 'processing' | 'error'
+export type VoicePanelState = 'idle' | 'listening' | 'processing' | 'error' | 'success'
 
 type VoicePanelProps = {
   state: VoicePanelState
   onMicClick?: () => void
+  message?: string
 }
 
 const panelCopy: Record<Exclude<VoicePanelState, 'listening'>, { label: string; helper: string }> = {
   idle: { label: 'Tap to speak', helper: 'Log a set, add an exercise, or finish the workout' },
   processing: { label: 'Processing...', helper: 'One sec' },
   error: { label: "Couldn't hear that", helper: 'Tap to try again' },
+  success: { label: 'Got it', helper: 'Tap to speak again' },
 }
 
 // A single persistent panel frame — only its contents swap between idle,
-// listening, processing, and error, so the outer outline never disappears.
-export function VoicePanel({ state, onMicClick }: VoicePanelProps) {
+// listening, processing, error, and success, so the outer outline never
+// disappears.
+export function VoicePanel({ state, onMicClick, message }: VoicePanelProps) {
   if (state === 'listening') {
     return (
       <Card className="flex h-72 flex-col items-center justify-center gap-4">
@@ -119,13 +123,13 @@ export function VoicePanel({ state, onMicClick }: VoicePanelProps) {
     )
   }
 
-  const { label, helper } = panelCopy[state]
+  const copy = panelCopy[state]
   return (
     <Card className="flex h-72 flex-col items-center justify-center gap-3">
       <MicButton state={state} onClick={onMicClick} />
       <div className="text-center">
-        <p className="text-sm font-medium text-ink">{label}</p>
-        <p className="text-xs text-graphite">{helper}</p>
+        <p className="text-sm font-medium text-ink">{message ?? copy.label}</p>
+        <p className="text-xs text-graphite">{copy.helper}</p>
       </div>
     </Card>
   )
