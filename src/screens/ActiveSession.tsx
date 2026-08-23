@@ -6,12 +6,11 @@ import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil } from '../components/icons'
 import { LiveDot } from '../components/LiveDot'
 import { Marquee } from '../components/Marquee'
-import { Modal } from '../components/Modal'
 import { NotesBox } from '../components/NotesBox'
 import { SearchInput } from '../components/SearchInput'
 import type { SetRowData } from '../components/SetTable'
 import { TextInput } from '../components/TextInput'
-import { MicButton, VoicePanel, type VoicePanelState } from '../components/VoiceListeningPanel'
+import { VoicePanel, type VoicePanelState } from '../components/VoiceListeningPanel'
 import { useSpeechRecognition } from '../lib/useSpeechRecognition'
 import { supabase } from '../lib/supabase'
 import { matchExerciseName, parseVoiceCommand, type VoiceAction } from '../lib/voiceParser'
@@ -64,7 +63,6 @@ export function ActiveSession() {
   const [finishing, setFinishing] = useState(false)
 
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null)
-  const [voiceOpen, setVoiceOpen] = useState(false)
   const [voiceState, setVoiceState] = useState<VoicePanelState>('idle')
   const [voiceMessage, setVoiceMessage] = useState<string | undefined>(undefined)
   const undoStackRef = useRef<Array<() => Promise<void> | void>>([])
@@ -361,12 +359,6 @@ export function ActiveSession() {
     },
   })
 
-  function openVoicePanel() {
-    setVoiceOpen(true)
-    setVoiceState('idle')
-    setVoiceMessage(undefined)
-  }
-
   function handleMicClick() {
     if (voiceState === 'idle' || voiceState === 'error' || voiceState === 'success') {
       setVoiceState('listening')
@@ -487,6 +479,15 @@ export function ActiveSession() {
         )}
       </div>
 
+      {!session.end_time &&
+        (voiceSupported ? (
+          <VoicePanel state={voiceState} onMicClick={handleMicClick} message={voiceMessage} />
+        ) : (
+          <p className="text-center text-xs text-graphite">
+            Voice input isn't supported in this browser.
+          </p>
+        ))}
+
       <div className="space-y-4">
         {exercises.map((ex, i) => (
           <ExerciseBlock
@@ -508,27 +509,6 @@ export function ActiveSession() {
         onChange={(e) => setNotesDraft(e.target.value)}
         onBlur={commitNotes}
       />
-
-      {!session.end_time && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto max-w-[480px]">
-          <div
-            className="pointer-events-auto absolute bottom-6 right-4"
-            style={{ marginBottom: 'calc(6.5rem + env(safe-area-inset-bottom))' }}
-          >
-            <MicButton onClick={openVoicePanel} />
-          </div>
-        </div>
-      )}
-
-      <Modal isOpen={voiceOpen} onClose={() => setVoiceOpen(false)} title="Voice Input">
-        {voiceSupported ? (
-          <VoicePanel state={voiceState} onMicClick={handleMicClick} message={voiceMessage} />
-        ) : (
-          <p className="p-6 text-center text-sm text-graphite">
-            Voice input isn't supported in this browser. Try Chrome or Safari on a recent iOS/Android version.
-          </p>
-        )}
-      </Modal>
     </div>
   )
 }
