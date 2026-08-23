@@ -346,6 +346,7 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
         onBlur={commitNotes}
         bordered={false}
         collapsible={false}
+        autoHeight
       />
 
       {variant === 'summary' ? (
