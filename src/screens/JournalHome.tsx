@@ -228,6 +228,7 @@ export function JournalHome() {
                   month: 'short',
                   day: 'numeric',
                 })}
+                onClick={() => navigate(`/history/${s.id}`)}
               />
             ))}
           </div>
