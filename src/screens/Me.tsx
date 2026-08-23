@@ -16,7 +16,7 @@ export function Me() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center gap-4 p-6 pt-24 text-center">
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-3xl font-bold text-ink">Gains</h1>
         <p className="text-sm text-graphite">Sign in to start your workout journal.</p>
         <Button variant="primary" leftIcon={<IconGoogle className="h-4 w-4" />} onClick={signInWithGoogle}>
