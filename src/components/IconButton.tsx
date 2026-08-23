@@ -5,11 +5,18 @@ import { Sketchy } from './Sketchy'
 
 type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon: ReactNode
+  tone?: 'neutral' | 'danger'
 }
 
-export function IconButton({ icon, className = '', disabled, ...rest }: IconButtonProps) {
+const toneFill: Record<'neutral' | 'danger', { fill: string; pressed: string }> = {
+  neutral: { fill: 'var(--color-mist)', pressed: '#c9c4b5' },
+  danger: { fill: 'var(--color-coral)', pressed: '#e56f61' },
+}
+
+export function IconButton({ icon, tone = 'neutral', className = '', disabled, ...rest }: IconButtonProps) {
   const [ref, size] = useMeasure<HTMLButtonElement>()
   const [pressed, setPressed] = useState(false)
+  const colors = toneFill[tone]
 
   return (
     <button
@@ -25,7 +32,10 @@ export function IconButton({ icon, className = '', disabled, ...rest }: IconButt
         width={size.width}
         height={size.height}
         radius={16}
-        fill={pressed ? '#eee9dc' : 'var(--color-paper)'}
+        fill={pressed ? colors.pressed : colors.fill}
+        fillStyle="hachure"
+        hachureGap={2.2}
+        fillWeight={2}
         stroke="var(--color-ink)"
       />
       <span className="relative z-10 inline-flex items-center justify-center">{icon}</span>

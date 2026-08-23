@@ -200,6 +200,7 @@ export function TemplateDetails() {
         </div>
         <IconButton
           icon={<IconTrash className="h-4 w-4" />}
+          tone="danger"
           onClick={() => setConfirmDelete(true)}
           aria-label="Delete template"
         />

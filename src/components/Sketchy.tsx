@@ -71,6 +71,36 @@ function buildRoundedRectStrokePaths(
   return drawables.flatMap((drawable) => generator.toPaths(drawable))
 }
 
+// Point ring approximating a rounded rect, for feeding into generator.polygon()
+// to get a genuine rough.js hachure/cross-hatch fill (crayon-scribble texture)
+// — generator.path() with a rounded-rect path string is what produces garbled
+// stroke geometry elsewhere in this file, but rough.js's own point-based
+// polygon fill solver has no such issue, so this sidesteps it entirely.
+function roundedRectPolygonPoints(x: number, y: number, w: number, h: number, r: number): [number, number][] {
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2))
+  if (rr <= 0.5) {
+    return [
+      [x, y],
+      [x + w, y],
+      [x + w, y + h],
+      [x, y + h],
+    ]
+  }
+  const segments = 6
+  const pts: [number, number][] = []
+  const addArc = (cx: number, cy: number, start: number, end: number) => {
+    for (let i = 0; i <= segments; i++) {
+      const t = start + ((end - start) * i) / segments
+      pts.push([cx + rr * Math.cos(t), cy + rr * Math.sin(t)])
+    }
+  }
+  addArc(x + w - rr, y + rr, -Math.PI / 2, 0)
+  addArc(x + w - rr, y + h - rr, 0, Math.PI / 2)
+  addArc(x + rr, y + h - rr, Math.PI / 2, Math.PI)
+  addArc(x + rr, y + rr, Math.PI, 1.5 * Math.PI)
+  return pts
+}
+
 type SketchyProps = {
   width: number
   height: number
@@ -82,6 +112,8 @@ type SketchyProps = {
   stroke?: string
   fill?: string
   fillStyle?: 'hachure' | 'solid' | 'zigzag' | 'cross-hatch'
+  hachureGap?: number
+  fillWeight?: number
   dash?: number[]
   seed?: number
   multiStroke?: boolean
@@ -100,6 +132,8 @@ export function Sketchy({
   stroke = 'var(--color-ink)',
   fill,
   fillStyle = 'solid',
+  hachureGap,
+  fillWeight,
   dash,
   seed,
   multiStroke = false,
@@ -143,24 +177,46 @@ export function Sketchy({
         ...strokeOptions,
         fill,
         fillStyle,
+        hachureGap,
+        fillWeight,
         disableMultiStrokeFill: true,
       })
-      return { flatFill: null, strokePaths: generator.toPaths(drawable) }
+      return { flatFill: null, fillPaths: null, strokePaths: generator.toPaths(drawable) }
     }
 
     if (shape === 'line') {
       const drawable = generator.line(inset, height / 2, width - inset, height / 2, strokeOptions)
-      return { flatFill: null, strokePaths: generator.toPaths(drawable) }
+      return { flatFill: null, fillPaths: null, strokePaths: generator.toPaths(drawable) }
     }
 
-    // Rectangle: a flat (non-rough) rounded-rect fill, plus a hand-drawn stroke
-    // composed from separate line/arc primitives — generator.path() with a
-    // custom rounded-rect path string produces garbled geometry in rough.js,
-    // so the outline is built from primitives that are known to render correctly.
+    // Rectangle: an outline composed from separate line/arc primitives —
+    // generator.path() with a custom rounded-rect path string produces
+    // garbled stroke geometry in rough.js, so the outline is built from
+    // primitives known to render correctly. The fill is either a flat
+    // (non-rough) rect for the default 'solid' style, or — for a textured
+    // "crayon" look — a genuine rough.js hachure/cross-hatch fill computed
+    // from a rounded-rect point polygon instead (that solver has no path-
+    // string issue, unlike the stroke geometry above).
     const r = Math.min(radius, w / 2, h / 2)
+    const strokePaths = buildRoundedRectStrokePaths(inset, inset, w, h, r, strokeOptions)
+    if (fill && fillStyle !== 'solid') {
+      const points = roundedRectPolygonPoints(inset, inset, w, h, r)
+      const fillDrawable = generator.polygon(points, {
+        fill,
+        fillStyle,
+        hachureGap,
+        fillWeight,
+        roughness: roughness * sizeScale,
+        bowing: bowing * sizeScale,
+        seed: effectiveSeed,
+        stroke: 'none',
+      })
+      return { flatFill: null, fillPaths: generator.toPaths(fillDrawable), strokePaths }
+    }
     return {
       flatFill: fill ? { x: inset, y: inset, w, h, r } : null,
-      strokePaths: buildRoundedRectStrokePaths(inset, inset, w, h, r, strokeOptions),
+      fillPaths: null,
+      strokePaths,
     }
   }, [
     width,
@@ -173,6 +229,8 @@ export function Sketchy({
     stroke,
     fill,
     fillStyle,
+    hachureGap,
+    fillWeight,
     dash,
     effectiveSeed,
     multiStroke,
@@ -193,6 +251,8 @@ export function Sketchy({
           fill={fill}
         />
       )}
+      {result.fillPaths &&
+        result.fillPaths.map((p, i) => <path key={`fill-${i}`} d={p.d} fill={p.fill ?? 'none'} stroke="none" />)}
       {showStroke &&
         result.strokePaths.map((p, i) => (
           <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill ?? 'none'} />
