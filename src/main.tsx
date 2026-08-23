@@ -16,6 +16,21 @@ const updateSW = registerSW({
   },
 })
 
+// Belt-and-suspenders: `controllerchange` is the low-level, guaranteed
+// browser event for "a new service worker just took over this page" —
+// reload on it directly instead of relying solely on vite-plugin-pwa's own
+// onNeedRefresh wiring, in case that callback doesn't fire in every
+// browser/timing combination (this was suspected as the cause of updates
+// not showing up on a plain desktop browser reload).
+if ('serviceWorker' in navigator) {
+  let reloaded = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) return
+    reloaded = true
+    window.location.reload()
+  })
+}
+
 // An installed iOS PWA usually suspends its WebView instead of reloading it
 // when reopened from the home screen, so the registerSW() call above never
 // re-runs and never notices a new deploy. Re-check for an update every time
