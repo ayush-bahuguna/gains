@@ -340,7 +340,7 @@ export function ActiveSession() {
     }
   }
 
-  const { start: startListening, supported: voiceSupported } = useSpeechRecognition({
+  const { start: startListening, stop: stopListening, supported: voiceSupported } = useSpeechRecognition({
     onResult: async (transcript) => {
       setVoiceState('processing')
       const action = parseVoiceCommand(transcript)
@@ -357,6 +357,12 @@ export function ActiveSession() {
       setVoiceState('error')
       setVoiceMessage(message)
     },
+    onEnd: () => {
+      // Recognition ended with no result and no error (e.g. the user tapped
+      // to stop before saying anything) — fall back to idle instead of
+      // getting stuck showing "Listening...".
+      setVoiceState((prev) => (prev === 'listening' ? 'idle' : prev))
+    },
   })
 
   function handleMicClick() {
@@ -364,6 +370,8 @@ export function ActiveSession() {
       setVoiceState('listening')
       setVoiceMessage(undefined)
       startListening()
+    } else if (voiceState === 'listening') {
+      stopListening()
     }
   }
 
