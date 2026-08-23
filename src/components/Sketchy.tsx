@@ -120,8 +120,12 @@ export function Sketchy({
     // make a small shape (checkbox, radio dot, icon box) render as a
     // distorted blob for unlucky random seeds, since the perturbation
     // amplitude doesn't shrink with the shape. Scale both down for shapes
-    // under ~40px so small elements stay reliably clean.
-    const sizeScale = Math.max(0.35, Math.min(1, Math.min(width, height) / 40))
+    // under ~40px so small elements stay reliably clean. A line's relevant
+    // dimension is its length (width) — it's deliberately thin in height,
+    // so min(width, height) would always read a divider/slider track as
+    // "tiny" and flatten its wobble almost to a straight line.
+    const referenceDimension = shape === 'line' ? width : Math.min(width, height)
+    const sizeScale = Math.max(0.35, Math.min(1, referenceDimension / 40))
     const strokeOptions: Options = {
       roughness: roughness * sizeScale,
       bowing: bowing * sizeScale,

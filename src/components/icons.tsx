@@ -241,3 +241,29 @@ export function IconStar(props: IconProps) {
     </svg>
   )
 }
+
+// Full-color brand mark — deliberately not using the shared outline `base()`
+// helper, since Google's sign-in guidelines require the standard multi-color
+// "G" rather than a themed/outline version.
+export function IconGoogle(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" {...props}>
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.82-.07-1.6-.2-2.36H12v4.47h6.47c-.28 1.5-1.13 2.78-2.4 3.63v3h3.89c2.28-2.1 3.56-5.2 3.56-8.74z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.94-2.9l-3.89-3c-1.08.73-2.46 1.16-4.05 1.16-3.11 0-5.75-2.1-6.69-4.92H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.31 14.34A7.2 7.2 0 014.9 12c0-.81.14-1.6.4-2.34V6.57H1.29A11.98 11.98 0 000 12c0 1.93.46 3.76 1.29 5.43z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.77 0 3.35.6 4.6 1.8l3.45-3.44C17.94 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.57l4.02 3.09c.94-2.82 3.58-4.91 6.69-4.91z"
+      />
+    </svg>
+  )
+}

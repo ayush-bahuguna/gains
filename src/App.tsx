@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import { RequireAuth } from './components/RequireAuth'
 import { HistoryList } from './screens/HistoryList'
 import { JournalHome } from './screens/JournalHome'
 import { Me } from './screens/Me'
@@ -18,15 +20,39 @@ import { EmptyStatesCheck } from './screens/dev/EmptyStatesCheck'
 import { TemplateCardCheck } from './screens/dev/TemplateCardCheck'
 import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
+import { KitchenSink } from './screens/dev/KitchenSink'
 
 function App() {
   return (
     <Routes>
-      <Route index element={<Navigate to="/journal" replace />} />
-      <Route path="/journal" element={<JournalHome />} />
-      <Route path="/templates" element={<TemplatesList />} />
-      <Route path="/history" element={<HistoryList />} />
-      <Route path="/me" element={<Me />} />
+      <Route element={<Layout />}>
+        <Route index element={<Navigate to="/journal" replace />} />
+        <Route
+          path="/journal"
+          element={
+            <RequireAuth>
+              <JournalHome />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates"
+          element={
+            <RequireAuth>
+              <TemplatesList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/history"
+          element={
+            <RequireAuth>
+              <HistoryList />
+            </RequireAuth>
+          }
+        />
+        <Route path="/me" element={<Me />} />
+      </Route>
       {/* Dev-only, one-component-at-a-time checkpoints — not linked from the app */}
       <Route path="/_dev/icons" element={<IconsCheck />} />
       <Route path="/_dev/buttons" element={<ButtonsCheck />} />
@@ -43,6 +69,7 @@ function App() {
       <Route path="/_dev/templatecard" element={<TemplateCardCheck />} />
       <Route path="/_dev/misc" element={<MiscCheck />} />
       <Route path="/_dev/voice" element={<VoiceCheck />} />
+      <Route path="/_dev/components" element={<KitchenSink />} />
     </Routes>
   )
 }
