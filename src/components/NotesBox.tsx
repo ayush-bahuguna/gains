@@ -7,16 +7,19 @@ import { Sketchy } from './Sketchy'
 type NotesBoxProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   defaultExpanded?: boolean
   bordered?: boolean
+  collapsible?: boolean
 }
 
 export function NotesBox({
   className = '',
   defaultExpanded = false,
   bordered = true,
+  collapsible = true,
   ...rest
 }: NotesBoxProps) {
   const [ref, size] = useMeasure<HTMLDivElement>()
-  const [expanded, setExpanded] = useState(defaultExpanded)
+  const [expandedState, setExpanded] = useState(defaultExpanded)
+  const expanded = collapsible ? expandedState : true
 
   return (
     <div ref={ref} className="relative p-4">
@@ -28,16 +31,20 @@ export function NotesBox({
         showStroke={bordered}
       />
       <div className="relative z-10">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="flex w-full items-center justify-between text-xs text-graphite"
-        >
-          <span>Notes</span>
-          <IconChevronDown
-            className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-          />
-        </button>
+        {collapsible ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="flex w-full items-center justify-between text-xs text-graphite"
+          >
+            <span>Notes</span>
+            <IconChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            />
+          </button>
+        ) : (
+          <p className="text-xs text-graphite">Notes</p>
+        )}
         {expanded && (
           <div className="relative mt-2">
             <textarea

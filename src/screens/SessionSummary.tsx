@@ -210,7 +210,15 @@ export function SessionSummary() {
       </div>
 
       <Card>
-        <p className="text-xl font-bold text-ink">{session.name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate text-xl font-bold text-ink">{session.name}</p>
+          <span
+            className="shrink-0 rounded-full px-4 py-1.5 text-base font-bold text-ink"
+            style={{ backgroundColor: 'var(--color-sage)' }}
+          >
+            {formatDuration(durationMs)}
+          </span>
+        </div>
         <p className="mt-1 text-xs text-graphite">
           {new Date(session.date).toLocaleDateString(undefined, {
             weekday: 'long',
@@ -218,17 +226,9 @@ export function SessionSummary() {
             day: 'numeric',
           })}
         </p>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm text-ink">
-            {formatTime(session.start_time)} – {formatTime(endTime)}
-          </span>
-          <span
-            className="rounded-full px-3 py-1 text-sm font-bold text-ink"
-            style={{ backgroundColor: 'var(--color-sage)' }}
-          >
-            {formatDuration(durationMs)}
-          </span>
-        </div>
+        <p className="mt-3 text-sm text-ink">
+          {formatTime(session.start_time)} – {formatTime(endTime)}
+        </p>
         {session.motivation_gif_url && (
           <div className="mt-3">
             <img
@@ -282,8 +282,8 @@ export function SessionSummary() {
         value={notesDraft}
         onChange={(e) => setNotesDraft(e.target.value)}
         onBlur={commitNotes}
-        defaultExpanded
         bordered={false}
+        collapsible={false}
       />
 
       <div className="flex gap-3">
