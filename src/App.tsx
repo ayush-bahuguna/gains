@@ -1,12 +1,33 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { HistoryList } from './screens/HistoryList'
+import { JournalHome } from './screens/JournalHome'
+import { Me } from './screens/Me'
+import { TemplatesList } from './screens/TemplatesList'
+import { ButtonsCheck } from './screens/dev/ButtonsCheck'
+import { IconsCheck } from './screens/dev/IconsCheck'
+import { CardsCheck } from './screens/dev/CardsCheck'
+import { ChipsCheck } from './screens/dev/ChipsCheck'
+import { InputsCheck } from './screens/dev/InputsCheck'
+import { TablesCheck } from './screens/dev/TablesCheck'
+import { BottomNavCheck } from './screens/dev/BottomNavCheck'
+
 function App() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-2 bg-paper p-6 text-center">
-      <h1 className="text-4xl font-bold text-ink">Gains</h1>
-      <p className="text-lg text-ink-secondary">Your notebook. Your progress.</p>
-      <p className="mt-6 rounded-[var(--radius-hand-md)] border border-line bg-paper-secondary px-4 py-2 text-accent">
-        Phase 0 scaffold — design system tokens verified
-      </p>
-    </main>
+    <Routes>
+      <Route index element={<Navigate to="/journal" replace />} />
+      <Route path="/journal" element={<JournalHome />} />
+      <Route path="/templates" element={<TemplatesList />} />
+      <Route path="/history" element={<HistoryList />} />
+      <Route path="/me" element={<Me />} />
+      {/* Dev-only, one-component-at-a-time checkpoints — not linked from the app */}
+      <Route path="/_dev/icons" element={<IconsCheck />} />
+      <Route path="/_dev/buttons" element={<ButtonsCheck />} />
+      <Route path="/_dev/inputs" element={<InputsCheck />} />
+      <Route path="/_dev/chips" element={<ChipsCheck />} />
+      <Route path="/_dev/cards" element={<CardsCheck />} />
+      <Route path="/_dev/tables" element={<TablesCheck />} />
+      <Route path="/_dev/bottomnav" element={<BottomNavCheck />} />
+    </Routes>
   )
 }
 

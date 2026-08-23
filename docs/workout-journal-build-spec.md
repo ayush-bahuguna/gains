@@ -106,56 +106,66 @@ Shown immediately after Finish Session; becomes the permanent record (same layou
 
 ## 4. Design System
 
-### 4.1 Typography
-Single font family: **Caveat** (handwritten style) for everything. Hierarchy comes from size/weight/spacing only — never introduce a second font family.
+> **Revision note:** this section was rewritten to match a second, more detailed reference image supplied after the first build attempt — it supersedes the original hand-drawn-ink-sketch direction (old palette `#FAF6EF`/`#222222`/`#507A5A`, single-font, wobbly organic borders). The new direction is a clean, mostly-straight-edged handwritten-flavor UI: generous rounding and thin solid borders instead of sketchy strokes.
 
-| Style | Size / Weight |
+### 4.1 Typography
+**Two font families**, not one — a decorative display face for headers, a more legible handwritten face for body/data text (numbers in tables, input values need to stay readable at small sizes, which Caveat struggles with below ~18px).
+
+| Style | Font / Size / Line-height |
 |---|---|
-| Page Title | Caveat Bold, 32–40px |
-| Section Title | Caveat Bold, 24–32px |
-| Exercise Name | Caveat Medium, 20px |
-| Body Text | Caveat Regular, 18–28px |
-| Metadata / small notes | Caveat Regular, 16–24px |
+| Header 1 | Caveat Bold, 32px / 1.2 |
+| Header 2 | Caveat Bold, 24px / 1.3 |
+| Section Title | Caveat SemiBold, 18px / 1.4 |
+| Body Large | Kalam Regular, 16px / 1.5 |
+| Body | Kalam Regular, 14px / 1.5 |
+| Caption / Note | Kalam Light, 12px / 1.4 |
 
 ### 4.2 Color Palette
 
 | Token | Hex | Use |
 |---|---|---|
-| Primary Paper | `#FAF6EF` | Main background |
-| Secondary Paper | `#F3EBDD` | Card / section background |
-| Notebook Line | `#DDD3C4` | Dividers, ruled lines |
-| Accent Green | `#507A5A` | Primary actions, active states, links |
-| Primary Ink | `#222222` | Primary text |
-| Secondary Ink | `#555555` | Secondary/metadata text |
-| Error Red | `#B55454` | Errors, destructive actions |
+| Paper | `#F7F4EC` | Main background |
+| Ink | `#1E1E1E` | Primary text, primary button fill, selected/active state |
+| Graphite | `#5C5C5C` | Secondary/metadata text |
+| Sage | `#B7C9B1` | Category chip fill (e.g. Chest), session progress bar |
+| Sky | `#A8D5E2` | Category chip fill (e.g. Back), exercise progress bar |
+| Sun | `#FFD166` | Category chip fill (e.g. Legs), warning toast background |
+| Coral | `#FF887A` | Error toast background, destructive accents |
+| Lavender | `#DDB7F8` | Category chip fill (e.g. Shoulders) |
+| Highlight | `#FFF4A3` | Callout/highlight accents |
+
+There is no single "accent" color the way earlier drafts had a signature green — ink-black is the primary/selected-state color throughout (filled buttons, active filter chips), and the pastel set (Sage/Sky/Sun/Coral/Lavender) is used for category chips and toast severity backgrounds.
 
 ### 4.3 Borders & Shapes
-- Every component: hand-drawn outline, slight imperfections, uneven line thickness, organic curves — nothing mathematically perfect
-- Shape vocabulary: rectangle, dashed rectangle, rounded rectangle, circle, pill, organic/blob
-- Dividers: hand-drawn horizontal lines (solid or dotted)
-- Tags/labels: small pill/tag shapes with a "taped" corner accent
+- Clean, precisely rounded shapes — thin, uniform-width solid borders. No hand-drawn wobble, no organic/imperfect lines.
+- Shape vocabulary: fully-rounded pill (buttons, chips, filters), rounded-rectangle with a generous fixed radius (cards, inputs, toasts), rounded-square (icon buttons), circle (avatars, mic button)
+- No taped-photo or tape-corner decoration anywhere in this revision
 
 ### 4.4 Components
-- **Buttons**: outlined, rounded, hand-drawn stroke. States: default, pressed (darker fill), disabled (faded). Primary = filled accent green; secondary = outlined
-- **Floating Action Button**: circular, accent green, used for the mic
-- **Icon buttons**: circular outline, single icon (add, delete/trash, edit/pencil)
-- **Inputs**: search bar (icon + placeholder + trailing mic), outlined input, underlined input, notes textarea — all hand-drawn borders
-- **Exercise card**: taped placeholder image + name + set table + Add Set + inline mic (see §3.2)
-- **Tables**: Set / Weight / Reps columns; row states = default, editing, selected, completed (strikethrough/muted), voice-updated (highlighted transiently)
-- **Navigation**: bottom tab bar, 4 items, active tab underlined in accent green
-- **Cards & containers**: session summary card, template card, note/highlight card — outlined, minimal, some with a taped-corner accent
-- **Checkboxes / radio buttons**: hand-drawn, states = unchecked/checked/disabled, selected/unselected/disabled
-- **Feedback**: toast/notification (e.g. "✓ Set added"), bottom sheet (e.g. Add Exercise / Add Note / Delete Exercise), modal (used sparingly — e.g. delete confirmation only)
-- **Icons**: simple outlined illustrations, consistent stroke weight, no Material-style icons. Set: dumbbell, notebook, microphone, stopwatch, pencil, checkmark, more (•••)
+- **Buttons**: primary = solid ink-black fill, white text, fully rounded pill; secondary = paper background, thin ink outline, fully rounded pill; tertiary = text-only link with chevron, no border; icon button = rounded-square outline containing a single icon
+- **Inputs**: text input, search input (leading icon), number stepper (`− [value] +`), dropdown (value + chevron) — all rounded-rect, thin solid border
+- **Chips/Tags**: category chips = solid pastel fill (Sage/Sky/Sun/Lavender), no border; type chips = outlined, paper background; filter chips = filled ink-black when selected, outlined when not
+- **Cards**: icon box (rounded-square, small icon) + title + subtitle + metadata + trailing chevron, thin border, rounded-rect, no rotation/tape
+- **Exercise card**: title + overflow menu (•••) at top, nested Set/Weight/Reps/✓ table, "+ Add set" action (see §3.2)
+- **Tables**: Set / Weight / Reps / ✓ columns; checkbox per row indicates completed vs. pending
+- **Navigation**: bottom tab bar, 4 items (Log, Templates, History, Me), simple outline icons with labels
+- **Progress indicators**: labeled horizontal progress bar (rounded track), e.g. "4/6 exercises", "3/5 sets" — Sage fill for session progress, Sky fill for exercise progress
+- **Checkboxes / toggles**: checkbox = rounded-square, ink check when checked; toggle switch = pill track, filled when on
+- **Radio buttons**: circle outline, filled ink dot when selected
+- **Slider**: horizontal track with a circular ink handle (used for weight/reps quick-entry)
+- **Pagination dots**: row of small circles, filled ink = active, outlined = inactive
+- **Feedback**: toast/alert banners — success (Sage bg), warning (Sun bg), error (Coral bg), each with an icon, message, and close (×); bottom sheet and modal used sparingly (e.g. delete confirmation)
+- **Empty states**: icon in a rounded-square box + heading + subtext + primary CTA button
+- **Icons**: simple outlined illustrations, consistent stroke weight, no Material-style icons. Set: notebook/log, dumbbell, calendar, clock/history, trending-up/chart, star, pencil, trash, more (•••), chevron-left/right, check-circle, plus-circle, x-circle, person, settings/gear, mic, search
 
-### 4.5 Mic / Voice Button States
-Idle → Listening (active, pulsing ring) → Processing (dashed ring) → Error (red). No confirmation step between states unless an error occurs.
+### 4.5 Mic / Voice Listening State
+A dedicated listening panel: "Listening..." label, an audio waveform visualization (vertical bars), a circular filled ink mic button, "Tap to stop" helper text. Mic button states: Idle → Listening (active) → Processing → Error. No confirmation step between states unless an error occurs.
 
 ### 4.6 Motion
-Subtle, natural, quick transitions (150–250ms), gentle easing. Never flashy. Used for: button press feedback, mic pulsing, row updates from voice input.
+Subtle, natural, quick transitions (150–250ms), gentle easing. Never flashy. Used for: button press feedback, waveform animation while listening, row updates from voice input.
 
 ### 4.7 Imagery
-Exercise images are illustrated, styled as printed photographs "taped" onto the notebook page (visible tape corners, slight rotation). Placeholder illustrations in V1; can be swapped for real reference images/animations later.
+No taped-photograph styling in this revision. Exercise cards use a plain icon box (dumbbell icon) rather than an illustrated photo placeholder. Real reference images/animations can be introduced later without changing this structure.
 
 ---
 
