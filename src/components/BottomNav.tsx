@@ -30,7 +30,7 @@ function TopDivider() {
 
 export function BottomNav() {
   return (
-    <div className="sticky bottom-0 z-40 bg-paper">
+    <div className="shrink-0 bg-paper" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <TopDivider />
       <nav className="flex pb-1">
         {tabs.map(({ to, label, icon: Icon }) => (
