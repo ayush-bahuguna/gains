@@ -287,23 +287,41 @@ export function ActiveSession() {
         return { ok: true, message: 'Set added' }
       }
 
-      case 'sameWeightReps': {
-        const exercise = exercises.find((e) => e.id === currentExerciseId)
-        const last = exercise?.sets[exercise.sets.length - 1]
-        if (!exercise || !last) return { ok: false, message: 'No previous set' }
-        const newSet = await insertSetAndAttach(exercise.id, last.weight, action.reps)
-        if (!newSet?.id) return { ok: false, message: 'Could not add set' }
-        undoStackRef.current.push(async () => deleteSetById(exercise.id, newSet.id!))
-        return { ok: true, message: 'Set added' }
-      }
-
-      case 'appendSet': {
-        const exercise = exercises.find((e) => e.id === currentExerciseId)
+      case 'logSet': {
+        let exercise: ExerciseData | null
+        let created = false
+        if (action.name) {
+          const resolved = await resolveExercise(action.name)
+          if (!resolved) return { ok: false, message: 'Could not add exercise' }
+          exercise = resolved.exercise
+          created = resolved.created
+          setCurrentExerciseId(exercise.id)
+        } else {
+          exercise = exercises.find((e) => e.id === currentExerciseId) ?? null
+        }
         if (!exercise) return { ok: false, message: 'No exercise selected' }
-        const newSet = await insertSetAndAttach(exercise.id, action.weight, action.reps)
-        if (!newSet?.id) return { ok: false, message: 'Could not add set' }
-        undoStackRef.current.push(async () => deleteSetById(exercise.id, newSet.id!))
-        return { ok: true, message: 'Set added' }
+
+        const last = exercise.sets[exercise.sets.length - 1] as SetRowData | undefined
+        const resolveAmount = (spec: (typeof action)['weight'], base: number | undefined): number | null => {
+          if (spec.kind === 'explicit') return spec.value
+          if (base === undefined) return null
+          return spec.kind === 'relative' ? base + spec.delta : base
+        }
+        const weightValue = resolveAmount(action.weight, last?.weight)
+        const repsValue = resolveAmount(action.reps, last?.reps)
+        if (weightValue === null || repsValue === null) return { ok: false, message: 'No previous set to reference' }
+
+        const finalExercise = exercise
+        const newSet = await insertSetAndAttach(finalExercise.id, weightValue, repsValue)
+        if (created) {
+          undoStackRef.current.push(async () => {
+            await deleteExerciseById(finalExercise.id)
+            setCurrentExerciseId(null)
+          })
+        } else if (newSet?.id) {
+          undoStackRef.current.push(async () => deleteSetById(finalExercise.id, newSet.id!))
+        }
+        return { ok: true, message: `${finalExercise.name}: ${weightValue}×${repsValue}` }
       }
 
       case 'selectExercise': {
@@ -317,22 +335,6 @@ export function ActiveSession() {
           })
         }
         return { ok: true, message: resolved.exercise.name }
-      }
-
-      case 'createOrSelectExerciseWithSet': {
-        const resolved = await resolveExercise(action.name)
-        if (!resolved) return { ok: false, message: 'Could not add exercise' }
-        setCurrentExerciseId(resolved.exercise.id)
-        const newSet = await insertSetAndAttach(resolved.exercise.id, action.weight, action.reps)
-        if (resolved.created) {
-          undoStackRef.current.push(async () => {
-            await deleteExerciseById(resolved.exercise.id)
-            setCurrentExerciseId(null)
-          })
-        } else if (newSet?.id) {
-          undoStackRef.current.push(async () => deleteSetById(resolved.exercise.id, newSet.id!))
-        }
-        return { ok: true, message: `${resolved.exercise.name} logged` }
       }
 
       default:

@@ -17,6 +17,66 @@ function isNumberWord(w: string) {
   return w in ONES || w in TEENS || w in TENS || w === 'hundred'
 }
 
+function clean(tok: string) {
+  return tok.toLowerCase().replace(/[^a-z]/g, '')
+}
+
+// Reads one grammatically-valid English number starting at `start` and
+// reports how many tokens it consumed. Only merges combinations that are
+// actually valid compounds (TENS+ONES like "eighty five" -> 85, or a
+// "hundred" group) — critically, does NOT merge two adjacent standalone
+// numbers like "eighty twelve" (weight 80, then reps 12) into one, which a
+// naive "keep consuming number words" scan would wrongly read as 92.
+function readNumberRun(tokens: string[], start: number): { value: number; consumed: number } {
+  let i = start
+  const first = clean(tokens[i])
+
+  if (first === 'hundred') {
+    return finishAfterHundred(tokens, i + 1, 100, start)
+  }
+  if (first in TEENS) {
+    return { value: TEENS[first], consumed: 1 }
+  }
+  if (first in TENS) {
+    i++
+    let value = TENS[first]
+    if (i < tokens.length && clean(tokens[i]) in ONES) {
+      value += ONES[clean(tokens[i])]
+      i++
+    }
+    return { value, consumed: i - start }
+  }
+  if (first in ONES) {
+    const value = ONES[first]
+    i++
+    if (i < tokens.length && clean(tokens[i]) === 'hundred') {
+      return finishAfterHundred(tokens, i + 1, value * 100, start)
+    }
+    return { value, consumed: 1 }
+  }
+  return { value: 0, consumed: 1 }
+}
+
+function finishAfterHundred(tokens: string[], from: number, base: number, start: number): { value: number; consumed: number } {
+  let j = from
+  if (j < tokens.length && clean(tokens[j]) === 'and') j++
+  if (j < tokens.length) {
+    const tw = clean(tokens[j])
+    if (tw in TEENS) return { value: base + TEENS[tw], consumed: j + 1 - start }
+    if (tw in TENS) {
+      j++
+      let value = base + TENS[tw]
+      if (j < tokens.length && clean(tokens[j]) in ONES) {
+        value += ONES[clean(tokens[j])]
+        j++
+      }
+      return { value, consumed: j - start }
+    }
+    if (tw in ONES) return { value: base + ONES[tw], consumed: j + 1 - start }
+  }
+  return { value: base, consumed: from - start }
+}
+
 // Speech recognition engines usually already normalize spoken numbers to
 // digits, but this isn't guaranteed across browsers — so parse word-numbers
 // too ("eighty five" -> "85") as a safety net, leaving anything else as-is.
@@ -25,45 +85,10 @@ export function normalizeSpokenNumbers(text: string): string {
   const out: string[] = []
   let i = 0
   while (i < tokens.length) {
-    const w = tokens[i].toLowerCase().replace(/[^a-z]/g, '')
-    if (isNumberWord(w)) {
-      let j = i
-      let current = 0
-      let sawNumber = false
-      while (j < tokens.length) {
-        const tw = tokens[j].toLowerCase().replace(/[^a-z]/g, '')
-        if (tw === 'and' && sawNumber) {
-          j++
-          continue
-        }
-        if (tw in ONES) {
-          current += ONES[tw]
-          sawNumber = true
-          j++
-          continue
-        }
-        if (tw in TEENS) {
-          current += TEENS[tw]
-          sawNumber = true
-          j++
-          continue
-        }
-        if (tw in TENS) {
-          current += TENS[tw]
-          sawNumber = true
-          j++
-          continue
-        }
-        if (tw === 'hundred') {
-          current = (current === 0 ? 1 : current) * 100
-          sawNumber = true
-          j++
-          continue
-        }
-        break
-      }
-      out.push(String(current))
-      i = j
+    if (isNumberWord(clean(tokens[i]))) {
+      const { value, consumed } = readNumberRun(tokens, i)
+      out.push(String(value))
+      i += consumed
       continue
     }
     out.push(tokens[i])
@@ -72,6 +97,8 @@ export function normalizeSpokenNumbers(text: string): string {
   return out.join(' ')
 }
 
+export type AmountSpec = { kind: 'same' } | { kind: 'relative'; delta: number } | { kind: 'explicit'; value: number }
+
 export type VoiceAction =
   | { type: 'undo' }
   | { type: 'finishWorkout' }
@@ -79,24 +106,58 @@ export type VoiceAction =
   | { type: 'deleteExercise'; name: string }
   | { type: 'increaseWeight'; amount: number }
   | { type: 'duplicateSet' }
-  | { type: 'sameWeightReps'; reps: number }
-  | { type: 'appendSet'; weight: number; reps: number }
-  | { type: 'createOrSelectExerciseWithSet'; name: string; weight: number; reps: number }
+  | { type: 'logSet'; name: string | null; weight: AmountSpec; reps: AmountSpec }
   | { type: 'selectExercise'; name: string }
 
 const NUM = '\\d+(?:\\.\\d+)?'
 const SEP = '(?:for|x|times|by)?'
+const UP_WORDS = '(?:plus|up|increase|add)'
+const DOWN_WORDS = '(?:minus|down|decrease|less)'
+
+// A weight/reps slot in the canonical grammar below — exactly one of:
+// a bare number ("80"), a modifier + number ("up 5", "down 5"), or the
+// single word "same". Each is 1–2 words, never a variable-length phrase,
+// which is what keeps the two slots unambiguously separable.
+const SLOT = `(?:same|${UP_WORDS}\\s+${NUM}|${DOWN_WORDS}\\s+${NUM}|${NUM})`
 
 // Decorative unit/count words real speech includes but the grammar doesn't
 // need ("65 kg", "12 reps", "12 sets" said loosely to mean reps) — stripped
 // before the weight/reps patterns are tried, never before the fixed-phrase
-// commands (delete last SET, another SET, same weight N repS) since those
-// need those exact words present.
+// commands (delete last SET, another SET) since those need those exact
+// words present.
 const FILLER_WORDS = /\b(kgs?|kilograms?|kilos?|lbs?|pounds?|reps?|repetitions?|sets?)\b/g
 
 function stripFillerWords(text: string): string {
   return text.replace(FILLER_WORDS, ' ').replace(/\s+/g, ' ').trim()
 }
+
+function parseSlot(text: string): AmountSpec {
+  const t = text.trim()
+  if (/^same$/.test(t)) return { kind: 'same' }
+  let m = t.match(new RegExp(`^${UP_WORDS}\\s+(${NUM})$`))
+  if (m) return { kind: 'relative', delta: parseFloat(m[1]) }
+  m = t.match(new RegExp(`^${DOWN_WORDS}\\s+(${NUM})$`))
+  if (m) return { kind: 'relative', delta: -parseFloat(m[1]) }
+  return { kind: 'explicit', value: parseFloat(t) }
+}
+
+// Canonical grammar: "<exercise name?> <weight> <reps>", where the name is
+// optional (falls back to whichever exercise was last referenced) and each
+// of weight/reps is an explicit number, "same" (as the last set), or a
+// relative "up N" / "down N" adjustment from the last set. e.g.:
+//   "bench press eighty twelve"     -> explicit 80 / explicit 12
+//   "bench press same up two"       -> same weight / reps +2
+//   "bench press up five down two"  -> weight +5 / reps -2
+//   "up five same"                  -> (current exercise) weight +5 / same reps
+// The name group is lazy-optional (`??`, not `?`) so the engine tries
+// "no name" first — otherwise a name-less relative command like "up five
+// same" backtracks into treating "up" as a bogus exercise name with weight
+// slot "five", instead of correctly reading "up five" as one relative slot
+// applied to the current exercise.
+// Slots must be separated by real whitespace (never `\s*`) — otherwise a
+// bare multi-digit number like "105" with nothing else could get split
+// arbitrarily into two slots ("10" / "5") just to satisfy the 2-slot shape.
+const LOG_SET_RE = new RegExp(`^(?:(.+?)\\s+)??(${SLOT})(?:\\s+${SEP})?\\s+(${SLOT})$`)
 
 export function parseVoiceCommand(raw: string): VoiceAction | null {
   const normalized = normalizeSpokenNumbers(raw.trim().toLowerCase())
@@ -121,17 +182,16 @@ export function parseVoiceCommand(raw: string): VoiceAction | null {
     return { type: 'duplicateSet' }
   }
 
-  m = normalized.match(new RegExp(`^same weight (${NUM}) reps?$`))
-  if (m) return { type: 'sameWeightReps', reps: parseFloat(m[1]) }
-
   const stripped = stripFillerWords(normalized)
 
-  m = stripped.match(new RegExp(`^(${NUM})\\s*${SEP}\\s*(${NUM})$`))
-  if (m) return { type: 'appendSet', weight: parseFloat(m[1]), reps: parseFloat(m[2]) }
-
-  m = stripped.match(new RegExp(`^(.+?)\\s+(${NUM})\\s*${SEP}\\s*(${NUM})$`))
+  m = stripped.match(LOG_SET_RE)
   if (m) {
-    return { type: 'createOrSelectExerciseWithSet', name: m[1].trim(), weight: parseFloat(m[2]), reps: parseFloat(m[3]) }
+    return {
+      type: 'logSet',
+      name: m[1]?.trim() || null,
+      weight: parseSlot(m[2]),
+      reps: parseSlot(m[3]),
+    }
   }
 
   return { type: 'selectExercise', name: stripped || normalized }
