@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireAuth } from './components/RequireAuth'
+import { ActiveSession } from './screens/ActiveSession'
 import { HistoryList } from './screens/HistoryList'
 import { JournalHome } from './screens/JournalHome'
 import { Me } from './screens/Me'
@@ -52,6 +53,14 @@ function App() {
           }
         />
         <Route path="/me" element={<Me />} />
+        <Route
+          path="/session/:id"
+          element={
+            <RequireAuth>
+              <ActiveSession />
+            </RequireAuth>
+          }
+        />
       </Route>
       {/* Dev-only, one-component-at-a-time checkpoints — not linked from the app */}
       <Route path="/_dev/icons" element={<IconsCheck />} />
