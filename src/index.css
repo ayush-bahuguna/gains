@@ -61,12 +61,7 @@ h3 {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  /* A definite height (not just min-height) keeps #root pinned exactly to
-     the viewport instead of growing with content — otherwise the bottom
-     nav's position depends on how tall each page's content happens to be,
-     and it visibly shifts between screens. dvh (not svh) tracks the real
-     visual viewport, which matters most in an installed/standalone PWA. */
-  height: 100dvh;
+  min-height: 100%;
 }
 
 .no-scrollbar {

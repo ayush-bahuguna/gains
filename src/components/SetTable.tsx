@@ -43,9 +43,9 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
   const editable = Boolean(onUpdateSet)
 
   return (
-    <div className="w-full text-sm">
+    <div className="w-full text-base">
       <div
-        className={`grid gap-2 pb-2 text-xs text-graphite ${editable ? 'grid-cols-[1fr_2fr_2fr_auto]' : 'grid-cols-3'}`}
+        className={`grid gap-2 pb-2 text-sm text-graphite ${editable ? 'grid-cols-[1fr_2fr_2fr_auto]' : 'grid-cols-3'}`}
       >
         <span>SET</span>
         <span>WEIGHT</span>
@@ -58,15 +58,16 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
           <div
             className={`grid items-center gap-2 py-1.5 text-ink ${editable ? 'grid-cols-[1fr_2fr_2fr_auto]' : 'grid-cols-3'}`}
           >
-            <span>{i + 1}</span>
+            <span className="text-lg">{i + 1}</span>
             {editable ? (
               <input
                 type="number"
                 inputMode="decimal"
-                value={s.weight}
-                onChange={(e) => onUpdateSet?.(i, 'weight', Number(e.target.value))}
+                placeholder="0"
+                value={s.weight === 0 ? '' : s.weight}
+                onChange={(e) => onUpdateSet?.(i, 'weight', e.target.value === '' ? 0 : Number(e.target.value))}
                 onWheel={blurOnWheel}
-                className="w-full min-w-0 bg-transparent py-1 text-ink focus:outline-none"
+                className="w-full min-w-0 rounded-lg bg-ink/5 px-2 py-1 text-ink placeholder:text-graphite/50 focus:outline-none"
               />
             ) : (
               <span>{s.weight} kg</span>
@@ -75,10 +76,11 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
               <input
                 type="number"
                 inputMode="numeric"
-                value={s.reps}
-                onChange={(e) => onUpdateSet?.(i, 'reps', Number(e.target.value))}
+                placeholder="0"
+                value={s.reps === 0 ? '' : s.reps}
+                onChange={(e) => onUpdateSet?.(i, 'reps', e.target.value === '' ? 0 : Number(e.target.value))}
                 onWheel={blurOnWheel}
-                className="w-full min-w-0 bg-transparent py-1 text-ink focus:outline-none"
+                className="w-full min-w-0 rounded-lg bg-ink/5 px-2 py-1 text-ink placeholder:text-graphite/50 focus:outline-none"
               />
             ) : (
               <span>{s.reps}</span>

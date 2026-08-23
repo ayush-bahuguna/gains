@@ -3,8 +3,8 @@ import { BottomNav } from './BottomNav'
 
 export function Layout() {
   return (
-    <div className="flex h-full flex-col bg-paper">
-      <div className="flex-1 overflow-y-auto" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+    <div className="flex min-h-full flex-col bg-paper">
+      <div className="flex-1 pb-28" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <Outlet />
       </div>
       <BottomNav />

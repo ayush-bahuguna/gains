@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { BottomSheet } from './BottomSheet'
 import { Button } from './Button'
 import { Card } from './Card'
 import { IconButton } from './IconButton'
@@ -73,7 +72,7 @@ export function ExerciseBlock({
         Add set
       </button>
 
-      <BottomSheet isOpen={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
+      <Modal isOpen={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
         <div className="flex flex-col divide-y divide-ink/10">
           <button
             type="button"
@@ -97,7 +96,7 @@ export function ExerciseBlock({
             Delete exercise
           </button>
         </div>
-      </BottomSheet>
+      </Modal>
 
       <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete exercise?">
         <p>This removes {title} and all its sets from this session.</p>
