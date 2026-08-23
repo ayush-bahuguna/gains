@@ -28,7 +28,16 @@ export function TemplateCard({
           <IconBox icon={icon} size="sm" />
           <p className="truncate text-sm font-medium text-ink">{title}</p>
         </div>
-        <IconButton icon={<IconMore className="h-4 w-4" />} onClick={onMenuClick} aria-label="More options" />
+        {onMenuClick && (
+          <IconButton
+            icon={<IconMore className="h-4 w-4" />}
+            onClick={(e) => {
+              e.stopPropagation()
+              onMenuClick()
+            }}
+            aria-label="More options"
+          />
+        )}
       </div>
       <p className="mt-2 text-xs text-graphite">{exercisePreview}</p>
       <p className="mt-1 text-xs text-graphite">{exerciseCount} exercises</p>

@@ -7,6 +7,7 @@ import { JournalHome } from './screens/JournalHome'
 import { Me } from './screens/Me'
 import { SessionDetails } from './screens/SessionDetails'
 import { SessionSummary } from './screens/SessionSummary'
+import { TemplateDetails } from './screens/TemplateDetails'
 import { TemplatesList } from './screens/TemplatesList'
 import { ButtonsCheck } from './screens/dev/ButtonsCheck'
 import { IconsCheck } from './screens/dev/IconsCheck'
@@ -43,6 +44,14 @@ function App() {
           element={
             <RequireAuth>
               <TemplatesList />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/templates/:id"
+          element={
+            <RequireAuth>
+              <TemplateDetails />
             </RequireAuth>
           }
         />

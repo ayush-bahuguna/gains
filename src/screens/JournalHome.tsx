@@ -5,6 +5,7 @@ import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { IconDumbbell, IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
+import { TemplateCard } from '../components/TemplateCard'
 import { getDailyMotivation, type DailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
@@ -15,6 +16,12 @@ type SessionRow = {
   date: string
   start_time: string
   end_time: string | null
+}
+
+type TemplateRow = {
+  id: string
+  name: string
+  exerciseNames: string[]
 }
 
 function timeOfDay() {
@@ -29,6 +36,7 @@ export function JournalHome() {
   const user = useAuthStore((s) => s.user)
   const [unfinished, setUnfinished] = useState<SessionRow | null>(null)
   const [recentSessions, setRecentSessions] = useState<SessionRow[]>([])
+  const [recentTemplates, setRecentTemplates] = useState<TemplateRow[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [motivation, setMotivation] = useState<DailyMotivation | null>(null)
@@ -48,7 +56,7 @@ export function JournalHome() {
     let cancelled = false
 
     async function load() {
-      const [{ data: unfinishedRows }, { data: recentRows }] = await Promise.all([
+      const [{ data: unfinishedRows }, { data: recentRows }, { data: templateRows }] = await Promise.all([
         supabase
           .from('workout_sessions')
           .select('id, name, date, start_time, end_time')
@@ -61,11 +69,34 @@ export function JournalHome() {
           .not('end_time', 'is', null)
           .order('start_time', { ascending: false })
           .limit(3),
+        supabase
+          .from('templates')
+          .select('id, name, template_exercises(position, exercise_definitions(name))')
+          .order('created_at', { ascending: false })
+          .limit(3),
       ])
 
       if (cancelled) return
       setUnfinished(unfinishedRows?.[0] ?? null)
       setRecentSessions(recentRows ?? [])
+      setRecentTemplates(
+        (templateRows ?? []).map((t) => {
+          const names = (
+            (t.template_exercises ?? []) as unknown as {
+              position: number
+              exercise_definitions: { name: string }[] | { name: string } | null
+            }[]
+          )
+            .sort((a, b) => a.position - b.position)
+            .map((te) =>
+              Array.isArray(te.exercise_definitions)
+                ? te.exercise_definitions[0]?.name
+                : te.exercise_definitions?.name,
+            )
+            .filter((n): n is string => Boolean(n))
+          return { id: t.id, name: t.name, exerciseNames: names }
+        }),
+      )
       setLoading(false)
     }
 
@@ -141,13 +172,28 @@ export function JournalHome() {
             View all
           </button>
         </div>
-        <EmptyState
-          icon={<IconDumbbell className="h-6 w-6" />}
-          title="No templates yet"
-          subtitle="Create one to speed up logging"
-          actionLabel="View Templates"
-          onAction={() => navigate('/templates')}
-        />
+        {recentTemplates.length === 0 ? (
+          <EmptyState
+            icon={<IconDumbbell className="h-6 w-6" />}
+            title="No templates yet"
+            subtitle="Create one to speed up logging"
+            actionLabel="View Templates"
+            onAction={() => navigate('/templates')}
+          />
+        ) : (
+          <div className="space-y-3">
+            {recentTemplates.map((t) => (
+              <TemplateCard
+                key={t.id}
+                icon={<IconDumbbell className="h-4 w-4" />}
+                title={t.name}
+                exercisePreview={t.exerciseNames.length > 0 ? t.exerciseNames.join(', ') : 'No exercises yet'}
+                exerciseCount={t.exerciseNames.length}
+                onClick={() => navigate(`/templates/${t.id}`)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section>
