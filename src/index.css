@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  /* Colors — spec §4.2 */
+  --color-paper: #faf6ef;
+  --color-paper-secondary: #f3ebdd;
+  --color-line: #ddd3c4;
+  --color-accent: #507a5a;
+  --color-ink: #222222;
+  --color-ink-secondary: #555555;
+  --color-error: #b55454;
+
+  /* Typography — spec §4.1 (single family, hierarchy via size/weight) */
+  --font-hand: 'Caveat', cursive;
+
+  /* Hand-drawn radii — organic, not mathematically perfect */
+  --radius-hand-sm: 10px 12px 9px 11px;
+  --radius-hand-md: 16px 18px 15px 17px;
+  --radius-hand-lg: 22px 25px 20px 24px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-hand);
+  font-size: 20px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  border-inline: 1px solid var(--color-line);
+}
