@@ -34,6 +34,12 @@ type UseSpeechRecognitionOptions = {
 // onresult/onend, which is a natural fit for one voice command per tap.
 export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechRecognitionOptions) {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  // Some engines end a session with neither a result nor an error — e.g. a
+  // denied/blocked mic permission can silently no-op straight to onend.
+  // Track whether onresult/onerror actually fired so that case surfaces as
+  // a visible error instead of quietly resetting to idle.
+  const handledRef = useRef(false)
+  const manualStopRef = useRef(false)
   const supported = getSpeechRecognitionCtor() !== null
 
   const start = useCallback(() => {
@@ -42,26 +48,38 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
       onError?.('Voice input is not supported in this browser.')
       return
     }
+    handledRef.current = false
+    manualStopRef.current = false
     const recognition = new Ctor()
     recognition.lang = 'en-US'
     recognition.continuous = false
     recognition.interimResults = false
     recognition.maxAlternatives = 1
     recognition.onresult = (event) => {
+      handledRef.current = true
       const transcript = event.results[0]?.[0]?.transcript ?? ''
       onResult(transcript)
     }
     recognition.onerror = (event) => {
-      onError?.(event.error === 'no-speech' ? "Didn't catch that." : 'Voice input error.')
+      handledRef.current = true
+      onError?.(event.error === 'no-speech' ? "Didn't catch that." : `Voice input error (${event.error}).`)
     }
     recognition.onend = () => {
+      if (!handledRef.current && !manualStopRef.current) {
+        onError?.('No speech detected — check microphone access for this app and try again.')
+      }
       onEnd?.()
     }
     recognitionRef.current = recognition
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      onError?.('Could not start voice input — try again.')
+    }
   }, [onResult, onError, onEnd])
 
   const stop = useCallback(() => {
+    manualStopRef.current = true
     recognitionRef.current?.stop()
   }, [])
 
