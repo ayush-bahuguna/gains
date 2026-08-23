@@ -87,6 +87,17 @@ export type VoiceAction =
 const NUM = '\\d+(?:\\.\\d+)?'
 const SEP = '(?:for|x|times|by)?'
 
+// Decorative unit/count words real speech includes but the grammar doesn't
+// need ("65 kg", "12 reps", "12 sets" said loosely to mean reps) — stripped
+// before the weight/reps patterns are tried, never before the fixed-phrase
+// commands (delete last SET, another SET, same weight N repS) since those
+// need those exact words present.
+const FILLER_WORDS = /\b(kgs?|kilograms?|kilos?|lbs?|pounds?|reps?|repetitions?|sets?)\b/g
+
+function stripFillerWords(text: string): string {
+  return text.replace(FILLER_WORDS, ' ').replace(/\s+/g, ' ').trim()
+}
+
 export function parseVoiceCommand(raw: string): VoiceAction | null {
   const normalized = normalizeSpokenNumbers(raw.trim().toLowerCase())
     .replace(/[.,!?]/g, '')
@@ -103,7 +114,7 @@ export function parseVoiceCommand(raw: string): VoiceAction | null {
   let m = normalized.match(/^delete (.+)$/)
   if (m) return { type: 'deleteExercise', name: m[1].trim() }
 
-  m = normalized.match(new RegExp(`^increase(?: by| the weight by)? (${NUM})$`))
+  m = normalized.match(new RegExp(`^increase(?: by| the weight by)? (${NUM})(?:\\s*(?:kgs?|lbs?|pounds?|kilos?))?$`))
   if (m) return { type: 'increaseWeight', amount: parseFloat(m[1]) }
 
   if (/^(another|duplicate|repeat)( the| that)?( previous)? set$/.test(normalized)) {
@@ -113,15 +124,17 @@ export function parseVoiceCommand(raw: string): VoiceAction | null {
   m = normalized.match(new RegExp(`^same weight (${NUM}) reps?$`))
   if (m) return { type: 'sameWeightReps', reps: parseFloat(m[1]) }
 
-  m = normalized.match(new RegExp(`^(${NUM})\\s*${SEP}\\s*(${NUM})$`))
+  const stripped = stripFillerWords(normalized)
+
+  m = stripped.match(new RegExp(`^(${NUM})\\s*${SEP}\\s*(${NUM})$`))
   if (m) return { type: 'appendSet', weight: parseFloat(m[1]), reps: parseFloat(m[2]) }
 
-  m = normalized.match(new RegExp(`^(.+?)\\s+(${NUM})\\s*${SEP}\\s*(${NUM})$`))
+  m = stripped.match(new RegExp(`^(.+?)\\s+(${NUM})\\s*${SEP}\\s*(${NUM})$`))
   if (m) {
     return { type: 'createOrSelectExerciseWithSet', name: m[1].trim(), weight: parseFloat(m[2]), reps: parseFloat(m[3]) }
   }
 
-  return { type: 'selectExercise', name: normalized }
+  return { type: 'selectExercise', name: stripped || normalized }
 }
 
 type MatchCandidate = { id: string; name: string; aliases?: string[] }
