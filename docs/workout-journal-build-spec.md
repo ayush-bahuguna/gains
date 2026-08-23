@@ -106,19 +106,17 @@ Shown immediately after Finish Session; becomes the permanent record (same layou
 
 ## 4. Design System
 
-> **Revision note:** this section was rewritten to match a second, more detailed reference image supplied after the first build attempt — it supersedes the original hand-drawn-ink-sketch direction (old palette `#FAF6EF`/`#222222`/`#507A5A`, single-font, wobbly organic borders). The new direction is a clean, mostly-straight-edged handwritten-flavor UI: generous rounding and thin solid borders instead of sketchy strokes.
+> **Revision note:** this section was rewritten to match a second, more detailed reference image supplied after the first build attempt — it supersedes the original hand-drawn-ink-sketch direction (old palette `#FAF6EF`/`#222222`/`#507A5A`, single-font). The new direction keeps this reference's layout/shape vocabulary and palette, but rendering ended up going back to genuine hand-drawn pen-stroke borders (via rough.js) rather than the clean straight-edged borders originally shown in that reference — see §4.3.
 
 ### 4.1 Typography
-**Two font families**, not one — a decorative display face for headers, a more legible handwritten face for body/data text (numbers in tables, input values need to stay readable at small sizes, which Caveat struggles with below ~18px).
+**Two font families**, not one — a decorative display face for headers, a handwritten face for body/data text. Both are single-weight (400) fonts; the root font size is bumped to 19px (from the 16px default) since these scripts render visually smaller than Caveat/Kalam did at the same declared size.
 
-| Style | Font / Size / Line-height |
+| Style | Font |
 |---|---|
-| Header 1 | Caveat Bold, 32px / 1.2 |
-| Header 2 | Caveat Bold, 24px / 1.3 |
-| Section Title | Caveat SemiBold, 18px / 1.4 |
-| Body Large | Kalam Regular, 16px / 1.5 |
-| Body | Kalam Regular, 14px / 1.5 |
-| Caption / Note | Kalam Light, 12px / 1.4 |
+| Header 1 / 2 / Section Title | Gloria Hallelujah, 400 |
+| Body Large / Body / Caption | Covered By Your Grace, 400 |
+
+Landed here after live-comparing several handwritten Google Fonts pairs during Phase 4 (Caveat/Kalam → Shadows Into Light/Nanum Pen Script → Shadows Into Light/Reenie Beanie → Gloria Hallelujah/Reenie Beanie → final).
 
 ### 4.2 Color Palette
 
@@ -137,8 +135,8 @@ Shown immediately after Finish Session; becomes the permanent record (same layou
 There is no single "accent" color the way earlier drafts had a signature green — ink-black is the primary/selected-state color throughout (filled buttons, active filter chips), and the pastel set (Sage/Sky/Sun/Coral/Lavender) is used for category chips and toast severity backgrounds.
 
 ### 4.3 Borders & Shapes
-- Clean, precisely rounded shapes — thin, uniform-width solid borders. No hand-drawn wobble, no organic/imperfect lines.
-- Shape vocabulary: fully-rounded pill (buttons, chips, filters), rounded-rectangle with a generous fixed radius (cards, inputs, toasts), rounded-square (icon buttons), circle (avatars, mic button)
+- Genuine hand-drawn pen-stroke borders (rendered with rough.js), not flat CSS borders — every outline has real wobble/roughness, scaled down for small elements (checkboxes, icon boxes) so they don't render as distorted blobs, and scaled up for large elements (cards) so the wobble reads clearly. Filled shapes use a flat solid fill underneath the sketchy outline; progress-bar fills and similar use rough.js's hachure fill style for a "colored with a crayon" texture instead of a flat rectangle.
+- Shape vocabulary: fully-rounded pill (buttons, chips, filters), rounded-rectangle with a generous fixed radius (cards, inputs, toasts), rounded-square (icon boxes), circle/ellipse (avatars, mic button, radio dots, pagination dots)
 - No taped-photo or tape-corner decoration anywhere in this revision
 
 ### 4.4 Components
@@ -152,8 +150,8 @@ There is no single "accent" color the way earlier drafts had a signature green �
 - **Progress indicators**: labeled horizontal progress bar (rounded track), e.g. "4/6 exercises", "3/5 sets" — Sage fill for session progress, Sky fill for exercise progress
 - **Checkboxes / toggles**: checkbox = rounded-square, ink check when checked; toggle switch = pill track, filled when on
 - **Radio buttons**: circle outline, filled ink dot when selected
-- **Slider**: horizontal track with a circular ink handle (used for weight/reps quick-entry)
-- **Pagination dots**: row of small circles, filled ink = active, outlined = inactive
+- **Slider**: hand-drawn track line with a custom sketchy circular ink handle overlaid on an invisible native range input (used for weight/reps quick-entry)
+- **Pagination dots**: tiny hand-drawn ink blobs, filled ink = active, faint ink = inactive
 - **Feedback**: toast/alert banners — success (Sage bg), warning (Sun bg), error (Coral bg), each with an icon, message, and close (×); bottom sheet and modal used sparingly (e.g. delete confirmation)
 - **Empty states**: icon in a rounded-square box + heading + subtext + primary CTA button
 - **Icons**: simple outlined illustrations, consistent stroke weight, no Material-style icons. Set: notebook/log, dumbbell, calendar, clock/history, trending-up/chart, star, pencil, trash, more (•••), chevron-left/right, check-circle, plus-circle, x-circle, person, settings/gear, mic, search
