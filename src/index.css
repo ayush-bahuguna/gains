@@ -12,6 +12,7 @@
   --color-coral: #ff887a;
   --color-lavender: #ddb7f8;
   --color-highlight: #fff4a3;
+  --color-grid-line: rgba(255, 154, 62, 0.22);
 
   /* Typography — spec §4.1 (Gloria Hallelujah for headers, Covered By Your
      Grace for body/data) */
@@ -38,6 +39,14 @@ html {
 body {
   margin: 0;
   background-color: var(--color-paper);
+  /* Graph-paper notebook feel — a plain background-image on <body> paints
+     across the whole scrollable canvas (not just the initial viewport) and
+     scrolls with the page by default, since background-attachment is left
+     at its default `scroll` rather than `fixed`. */
+  background-image:
+    repeating-linear-gradient(to right, var(--color-grid-line) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(to bottom, var(--color-grid-line) 0 1px, transparent 1px 24px);
+  background-size: 24px 24px;
   color: var(--color-ink);
   font-family: var(--font-body);
   font-weight: 400;
