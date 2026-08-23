@@ -5,6 +5,7 @@ import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { IconDumbbell, IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
+import { getDailyMotivation, type DailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
@@ -30,6 +31,17 @@ export function JournalHome() {
   const [recentSessions, setRecentSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  const [motivation, setMotivation] = useState<DailyMotivation | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getDailyMotivation().then((m) => {
+      if (!cancelled) setMotivation(m)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -66,7 +78,14 @@ export function JournalHome() {
   async function startSession() {
     if (!user || starting) return
     setStarting(true)
-    const { data, error } = await supabase.from('workout_sessions').insert({}).select().single()
+    const { data, error } = await supabase
+      .from('workout_sessions')
+      .insert({
+        motivation_gif_url: motivation?.gifUrl ?? null,
+        motivation_quote: motivation?.quote ?? null,
+      })
+      .select()
+      .single()
     setStarting(false)
     if (error || !data) return
     navigate(`/session/${data.id}`)
@@ -84,6 +103,16 @@ export function JournalHome() {
           Good {timeOfDay()}, {greetingName}
         </h1>
         <p className="mt-1 text-sm text-graphite">Ready to get stronger today?</p>
+        {motivation && (
+          <div className="mt-3">
+            <img
+              src={motivation.gifUrl}
+              alt=""
+              className="w-full rounded-2xl border border-ink/10 object-cover"
+            />
+            <p className="mt-2 text-sm italic text-graphite">"{motivation.quote}"</p>
+          </div>
+        )}
       </Card>
 
       <div className="space-y-3">

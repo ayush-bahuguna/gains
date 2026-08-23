@@ -85,6 +85,7 @@ type SketchyProps = {
   dash?: number[]
   seed?: number
   multiStroke?: boolean
+  showStroke?: boolean
   className?: string
 }
 
@@ -102,6 +103,7 @@ export function Sketchy({
   dash,
   seed,
   multiStroke = false,
+  showStroke = true,
   className = '',
 }: SketchyProps) {
   // When no explicit seed is given, generate one random-but-stable value per
@@ -191,9 +193,10 @@ export function Sketchy({
           fill={fill}
         />
       )}
-      {result.strokePaths.map((p, i) => (
-        <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill ?? 'none'} />
-      ))}
+      {showStroke &&
+        result.strokePaths.map((p, i) => (
+          <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill ?? 'none'} />
+        ))}
     </svg>
   )
 }

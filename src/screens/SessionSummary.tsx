@@ -13,6 +13,8 @@ type SessionData = {
   start_time: string
   end_time: string | null
   notes: string
+  motivation_gif_url: string | null
+  motivation_quote: string | null
 }
 
 type SetData = { weight: number; reps: number }
@@ -72,7 +74,7 @@ export function SessionSummary() {
       const [{ data: sessionRow }, { data: exerciseRows }] = await Promise.all([
         supabase
           .from('workout_sessions')
-          .select('id, name, date, start_time, end_time, notes')
+          .select('id, name, date, start_time, end_time, notes, motivation_gif_url, motivation_quote')
           .eq('id', id)
           .maybeSingle(),
         supabase
@@ -227,6 +229,18 @@ export function SessionSummary() {
             {formatDuration(durationMs)}
           </span>
         </div>
+        {session.motivation_gif_url && (
+          <div className="mt-3">
+            <img
+              src={session.motivation_gif_url}
+              alt=""
+              className="w-full rounded-2xl border border-ink/10 object-cover"
+            />
+            {session.motivation_quote && (
+              <p className="mt-2 text-sm italic text-graphite">"{session.motivation_quote}"</p>
+            )}
+          </div>
+        )}
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
@@ -263,7 +277,14 @@ export function SessionSummary() {
         })}
       </div>
 
-      <NotesBox placeholder="No notes" value={notesDraft} onChange={(e) => setNotesDraft(e.target.value)} onBlur={commitNotes} />
+      <NotesBox
+        placeholder="No notes"
+        value={notesDraft}
+        onChange={(e) => setNotesDraft(e.target.value)}
+        onBlur={commitNotes}
+        defaultExpanded
+        bordered={false}
+      />
 
       <div className="flex gap-3">
         <Button variant="secondary" className="flex-1" onClick={() => navigate('/journal')}>

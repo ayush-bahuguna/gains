@@ -43,8 +43,14 @@ create table if not exists workout_sessions (
   end_time timestamptz,
   duration interval generated always as (end_time - start_time) stored,
   notes text not null default '',
+  motivation_gif_url text,
+  motivation_quote text,
   created_at timestamptz not null default now()
 );
+
+-- Added after the initial table creation — safe to re-run.
+alter table workout_sessions add column if not exists motivation_gif_url text;
+alter table workout_sessions add column if not exists motivation_quote text;
 
 create index if not exists workout_sessions_user_id_date_idx
   on workout_sessions (user_id, date desc);

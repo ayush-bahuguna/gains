@@ -4,15 +4,29 @@ import { useMeasure } from '../lib/useMeasure'
 import { IconChevronDown } from './icons'
 import { Sketchy } from './Sketchy'
 
-type NotesBoxProps = TextareaHTMLAttributes<HTMLTextAreaElement>
+type NotesBoxProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  defaultExpanded?: boolean
+  bordered?: boolean
+}
 
-export function NotesBox({ className = '', ...rest }: NotesBoxProps) {
+export function NotesBox({
+  className = '',
+  defaultExpanded = false,
+  bordered = true,
+  ...rest
+}: NotesBoxProps) {
   const [ref, size] = useMeasure<HTMLDivElement>()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
 
   return (
     <div ref={ref} className="relative p-4">
-      <Sketchy width={size.width} height={size.height} radius={20} fill="var(--color-paper)" />
+      <Sketchy
+        width={size.width}
+        height={size.height}
+        radius={20}
+        fill="var(--color-paper)"
+        showStroke={bordered}
+      />
       <div className="relative z-10">
         <button
           type="button"
