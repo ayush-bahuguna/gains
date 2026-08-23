@@ -113,6 +113,19 @@ h3 {
   border: none;
 }
 
+/* Set-table weight/reps cells: plain numeric entry only — no spinner
+   arrows, no scroll-to-change (the scroll-wheel part is handled via an
+   onWheel blur in SetTable.tsx, since CSS alone can't prevent that). */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 @keyframes wave-pulse {
   0%,
   100% {

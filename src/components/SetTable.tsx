@@ -1,3 +1,4 @@
+import type { WheelEvent } from 'react'
 import { useMeasure } from '../lib/useMeasure'
 import { IconTrash } from './icons'
 import { Sketchy } from './Sketchy'
@@ -13,6 +14,10 @@ type SetTableProps = {
   sets: SetRowData[]
   onUpdateSet?: (index: number, field: 'weight' | 'reps', value: number) => void
   onDeleteSet?: (index: number) => void
+}
+
+function blurOnWheel(e: WheelEvent<HTMLInputElement>) {
+  e.currentTarget.blur()
 }
 
 function RowDivider({ seed }: { seed: number }) {
@@ -60,6 +65,7 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
                 inputMode="decimal"
                 value={s.weight}
                 onChange={(e) => onUpdateSet?.(i, 'weight', Number(e.target.value))}
+                onWheel={blurOnWheel}
                 className="w-full min-w-0 bg-transparent py-1 text-ink focus:outline-none"
               />
             ) : (
@@ -71,6 +77,7 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
                 inputMode="numeric"
                 value={s.reps}
                 onChange={(e) => onUpdateSet?.(i, 'reps', Number(e.target.value))}
+                onWheel={blurOnWheel}
                 className="w-full min-w-0 bg-transparent py-1 text-ink focus:outline-none"
               />
             ) : (

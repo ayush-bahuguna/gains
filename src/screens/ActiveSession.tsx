@@ -291,24 +291,26 @@ export function ActiveSession() {
         </p>
       </div>
 
-      <div>
+      <div className="relative">
         <SearchInput
           placeholder="Search to add an exercise"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         {results.length > 0 && (
-          <div className="mt-2 flex flex-col divide-y divide-ink/10">
-            {results.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => addExercise(r)}
-                className="py-2.5 text-left text-sm text-ink"
-              >
-                {r.name}
-              </button>
-            ))}
+          <div className="absolute inset-x-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-ink/15 bg-paper p-2 shadow-lg">
+            <div className="flex flex-col divide-y divide-ink/10">
+              {results.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => addExercise(r)}
+                  className="rounded-xl px-2 py-2.5 text-left text-sm text-ink active:bg-ink/5"
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

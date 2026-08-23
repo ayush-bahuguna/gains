@@ -72,14 +72,14 @@ export function ExerciseBlock({
         <SetTable sets={sets} onUpdateSet={onUpdateSet} onDeleteSet={onDeleteSet} />
       </div>
 
-      <Button
-        variant="tertiary"
+      <button
+        type="button"
         onClick={onAddSet}
-        leftIcon={<IconPlus className="h-4 w-4" />}
-        className="mt-3"
+        className="mt-3 inline-flex items-center gap-2 rounded-full bg-ink/5 px-3 py-1.5 text-sm text-ink active:bg-ink/10"
       >
+        <IconPlus className="h-4 w-4" />
         Add set
-      </Button>
+      </button>
 
       <BottomSheet isOpen={menuOpen} onClose={() => setMenuOpen(false)} title={title}>
         <div className="flex flex-col divide-y divide-ink/10">
