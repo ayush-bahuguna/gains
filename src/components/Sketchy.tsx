@@ -33,27 +33,38 @@ function buildRoundedRectStrokePaths(
 
   if (rr > 0.5) {
     const d = rr * 2
+    // Every line/arc is jittered independently by rough.js, so two segments
+    // meant to meet at an exact point rarely land in the same place — that
+    // shows up as a visible gap at every corner. Extending each arc's sweep
+    // slightly past its ideal boundary makes it deliberately overlap the
+    // adjacent line instead, reading as a confident pen overshoot rather
+    // than a broken/missing corner.
+    // Scaled by radius: a fixed angle eats a much bigger share of a small
+    // corner's arc than a large one, causing extra faceting/bumpiness on
+    // small shapes (icon boxes, checkboxes) even though it looks right on
+    // large ones (cards).
+    const overlap = 0.16 * Math.min(1, rr / 20)
     if (!hasLeftRightEdge) {
       // Pill shape (left/right edges collapsed to zero) — each cap must be
       // ONE continuous semicircle. Two independently-jittered quarter-arcs
       // sharing a center don't meet cleanly at their shared endpoint and
       // render as a crossed/tangled knot instead of a smooth rounded cap.
       drawables.push(
-        generator.arc(x + rr, y + rr, d, d, 0.5 * Math.PI, 1.5 * Math.PI, false, options),
-        generator.arc(x + w - rr, y + rr, d, d, -0.5 * Math.PI, 0.5 * Math.PI, false, options),
+        generator.arc(x + rr, y + rr, d, d, 0.5 * Math.PI - overlap, 1.5 * Math.PI + overlap, false, options),
+        generator.arc(x + w - rr, y + rr, d, d, -0.5 * Math.PI - overlap, 0.5 * Math.PI + overlap, false, options),
       )
     } else if (!hasTopBottomEdge) {
       // Vertical pill (top/bottom edges collapsed) — same reasoning.
       drawables.push(
-        generator.arc(x + rr, y + rr, d, d, Math.PI, 2 * Math.PI, false, options),
-        generator.arc(x + rr, y + h - rr, d, d, 0, Math.PI, false, options),
+        generator.arc(x + rr, y + rr, d, d, Math.PI - overlap, 2 * Math.PI + overlap, false, options),
+        generator.arc(x + rr, y + h - rr, d, d, 0 - overlap, Math.PI + overlap, false, options),
       )
     } else {
       drawables.push(
-        generator.arc(x + rr, y + rr, d, d, Math.PI, 1.5 * Math.PI, false, options),
-        generator.arc(x + w - rr, y + rr, d, d, 1.5 * Math.PI, 2 * Math.PI, false, options),
-        generator.arc(x + w - rr, y + h - rr, d, d, 0, 0.5 * Math.PI, false, options),
-        generator.arc(x + rr, y + h - rr, d, d, 0.5 * Math.PI, Math.PI, false, options),
+        generator.arc(x + rr, y + rr, d, d, Math.PI - overlap, 1.5 * Math.PI + overlap, false, options),
+        generator.arc(x + w - rr, y + rr, d, d, 1.5 * Math.PI - overlap, 2 * Math.PI + overlap, false, options),
+        generator.arc(x + w - rr, y + h - rr, d, d, 0 - overlap, 0.5 * Math.PI + overlap, false, options),
+        generator.arc(x + rr, y + h - rr, d, d, 0.5 * Math.PI - overlap, Math.PI + overlap, false, options),
       )
     }
   }
@@ -105,9 +116,15 @@ export function Sketchy({
     const inset = strokeWidth * 1.4
     const w = width - inset * 2
     const h = height - inset * 2
+    // A fixed roughness/bowing amount looks right on a large card but can
+    // make a small shape (checkbox, radio dot, icon box) render as a
+    // distorted blob for unlucky random seeds, since the perturbation
+    // amplitude doesn't shrink with the shape. Scale both down for shapes
+    // under ~40px so small elements stay reliably clean.
+    const sizeScale = Math.max(0.35, Math.min(1, Math.min(width, height) / 40))
     const strokeOptions: Options = {
-      roughness,
-      bowing,
+      roughness: roughness * sizeScale,
+      bowing: bowing * sizeScale,
       strokeWidth,
       stroke,
       seed: effectiveSeed,

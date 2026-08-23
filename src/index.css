@@ -53,3 +53,61 @@ h3 {
   flex-direction: column;
   min-height: 100svh;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.gains-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  background: transparent;
+  outline: none;
+}
+.gains-slider::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 4px;
+}
+.gains-slider::-moz-range-track {
+  background: transparent;
+  height: 4px;
+}
+/* Thumb is kept for hit-testing/dragging but rendered invisible — the
+   visible handle is a hand-drawn Sketchy circle overlaid on top instead. */
+.gains-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+.gains-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+@keyframes wave-pulse {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.wave-bar {
+  transform-origin: bottom;
+  animation: wave-pulse 0.9s ease-in-out infinite;
+}

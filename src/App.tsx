@@ -10,6 +10,14 @@ import { ChipsCheck } from './screens/dev/ChipsCheck'
 import { InputsCheck } from './screens/dev/InputsCheck'
 import { TablesCheck } from './screens/dev/TablesCheck'
 import { BottomNavCheck } from './screens/dev/BottomNavCheck'
+import { SmallElementsCheck } from './screens/dev/SmallElementsCheck'
+import { ProgressCheck } from './screens/dev/ProgressCheck'
+import { NotesCheck } from './screens/dev/NotesCheck'
+import { AlertsCheck } from './screens/dev/AlertsCheck'
+import { EmptyStatesCheck } from './screens/dev/EmptyStatesCheck'
+import { TemplateCardCheck } from './screens/dev/TemplateCardCheck'
+import { MiscCheck } from './screens/dev/MiscCheck'
+import { VoiceCheck } from './screens/dev/VoiceCheck'
 
 function App() {
   return (
@@ -27,6 +35,14 @@ function App() {
       <Route path="/_dev/cards" element={<CardsCheck />} />
       <Route path="/_dev/tables" element={<TablesCheck />} />
       <Route path="/_dev/bottomnav" element={<BottomNavCheck />} />
+      <Route path="/_dev/small" element={<SmallElementsCheck />} />
+      <Route path="/_dev/progress" element={<ProgressCheck />} />
+      <Route path="/_dev/notes" element={<NotesCheck />} />
+      <Route path="/_dev/alerts" element={<AlertsCheck />} />
+      <Route path="/_dev/empty" element={<EmptyStatesCheck />} />
+      <Route path="/_dev/templatecard" element={<TemplateCardCheck />} />
+      <Route path="/_dev/misc" element={<MiscCheck />} />
+      <Route path="/_dev/voice" element={<VoiceCheck />} />
     </Routes>
   )
 }
