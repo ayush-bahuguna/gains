@@ -252,7 +252,9 @@ export function Sketchy({
         />
       )}
       {result.fillPaths &&
-        result.fillPaths.map((p, i) => <path key={`fill-${i}`} d={p.d} fill={p.fill ?? 'none'} stroke="none" />)}
+        result.fillPaths.map((p, i) => (
+          <path key={`fill-${i}`} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill ?? 'none'} />
+        ))}
       {showStroke &&
         result.strokePaths.map((p, i) => (
           <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill ?? 'none'} />
