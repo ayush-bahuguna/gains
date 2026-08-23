@@ -12,7 +12,11 @@
   --color-coral: #ff887a;
   --color-lavender: #ddb7f8;
   --color-highlight: #fff4a3;
-  --color-grid-line: rgba(255, 154, 62, 0.22);
+  /* Notebook page background — a warmer, more yellow tone than --color-paper
+     so cards (which still use --color-paper) read as crisp pages sitting on
+     top of a more visibly yellow notebook background. */
+  --color-page-bg: #f6ecc4;
+  --color-grid-line: rgba(255, 154, 62, 0.13);
 
   /* Typography — spec §4.1 (Gloria Hallelujah for headers, Covered By Your
      Grace for body/data) */
@@ -38,7 +42,7 @@ html {
 
 body {
   margin: 0;
-  background-color: var(--color-paper);
+  background-color: var(--color-page-bg);
   /* Graph-paper notebook feel — a plain background-image on <body> paints
      across the whole scrollable canvas (not just the initial viewport) and
      scrolls with the page by default, since background-attachment is left
