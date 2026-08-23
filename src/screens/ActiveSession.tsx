@@ -4,6 +4,8 @@ import { Button } from '../components/Button'
 import { ExerciseBlock } from '../components/ExerciseBlock'
 import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil } from '../components/icons'
+import { LiveDot } from '../components/LiveDot'
+import { Marquee } from '../components/Marquee'
 import { NotesBox } from '../components/NotesBox'
 import { SearchInput } from '../components/SearchInput'
 import type { SetRowData } from '../components/SetTable'
@@ -271,13 +273,14 @@ export function ActiveSession() {
             ) : (
               <button
                 type="button"
-                className="flex items-center gap-1.5 text-left"
+                className="flex min-w-0 w-full items-center gap-1.5 text-left"
                 onClick={() => {
                   setNameDraft(session.name)
                   setRenamingSession(true)
                 }}
               >
-                <h1 className="truncate text-2xl font-bold text-ink">{session.name}</h1>
+                <h1 className="sr-only">{session.name}</h1>
+                <Marquee text={session.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
                 <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
               </button>
             )}
@@ -286,7 +289,8 @@ export function ActiveSession() {
             {finishing ? 'Finishing...' : 'Finish'}
           </Button>
         </div>
-        <p className="mt-1 pl-12 text-xs text-graphite">
+        <p className="mt-1 flex items-center gap-1.5 pl-12 text-xs text-graphite">
+          {!session.end_time && <LiveDot />}
           {formatElapsed(now - new Date(session.start_time).getTime())} elapsed
         </p>
       </div>

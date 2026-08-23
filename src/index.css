@@ -139,3 +139,20 @@ input[type='number'] {
   transform-origin: bottom;
   animation: wave-pulse 0.9s ease-in-out infinite;
 }
+
+@keyframes marquee-scroll {
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+  50%,
+  62% {
+    transform: translateX(var(--marquee-distance));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.marquee-text {
+  animation: marquee-scroll 7s ease-in-out infinite;
+}
