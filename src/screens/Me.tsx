@@ -26,7 +26,8 @@ export function Me() {
     )
   }
 
-  const name = (user.user_metadata?.full_name as string | undefined) ?? user.email
+  const fullName = user.user_metadata?.full_name as string | undefined
+  const name = fullName?.split(' ')[0] ?? user.email
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
   return (
@@ -43,7 +44,7 @@ export function Me() {
           <p className="truncate text-xs text-graphite">{user.email}</p>
         </div>
       </Card>
-      <Button variant="secondary" onClick={signOut} className="mt-4 w-full">
+      <Button variant="primary" onClick={signOut} className="mt-4 w-full">
         Log out
       </Button>
     </div>
