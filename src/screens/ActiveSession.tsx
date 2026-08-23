@@ -191,22 +191,6 @@ export function ActiveSession() {
     await supabase.from('exercises').delete().eq('id', exercise.id)
   }
 
-  async function moveExercise(exerciseIndex: number, direction: -1 | 1) {
-    const targetIndex = exerciseIndex + direction
-    if (targetIndex < 0 || targetIndex >= exercises.length) return
-    const a = exercises[exerciseIndex]
-    const b = exercises[targetIndex]
-    const next = [...exercises]
-    next[exerciseIndex] = { ...b, position: a.position }
-    next[targetIndex] = { ...a, position: b.position }
-    ;[next[exerciseIndex], next[targetIndex]] = [next[targetIndex], next[exerciseIndex]]
-    setExercises(next)
-    await Promise.all([
-      supabase.from('exercises').update({ position: b.position }).eq('id', a.id),
-      supabase.from('exercises').update({ position: a.position }).eq('id', b.id),
-    ])
-  }
-
   function submitSessionRename() {
     const trimmed = nameDraft.trim()
     setRenamingSession(false)
@@ -330,10 +314,6 @@ export function ActiveSession() {
             onDeleteSet={(setIndex) => deleteSet(i, setIndex)}
             onRename={(newName) => renameExercise(i, newName)}
             onDelete={() => deleteExercise(i)}
-            onMoveUp={() => moveExercise(i, -1)}
-            onMoveDown={() => moveExercise(i, 1)}
-            canMoveUp={i > 0}
-            canMoveDown={i < exercises.length - 1}
           />
         ))}
       </div>

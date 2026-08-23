@@ -15,10 +15,14 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-6"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-6"
       onClick={onClose}
     >
-      <div ref={ref} className="relative w-full max-w-sm p-5" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={ref}
+        className="relative max-h-[80vh] w-full max-w-sm overflow-y-auto p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Sketchy width={size.width} height={size.height} radius={20} fill="var(--color-paper)" />
         <div className="relative z-10">
           {title && <h2 className="mb-2 text-xl font-bold text-ink">{title}</h2>}

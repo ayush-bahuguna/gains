@@ -14,10 +14,10 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/40" onClick={onClose}>
       <div
         ref={ref}
-        className="relative w-full max-w-[480px] p-5 pb-8"
+        className="relative max-h-[80vh] w-full max-w-[480px] overflow-y-auto p-5 pb-8"
         onClick={(e) => e.stopPropagation()}
       >
         <Sketchy width={size.width} height={size.height} radius={24} fill="var(--color-paper)" />

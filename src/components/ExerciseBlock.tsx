@@ -16,10 +16,6 @@ type ExerciseBlockProps = {
   onDeleteSet?: (index: number) => void
   onRename?: (newTitle: string) => void
   onDelete?: () => void
-  onMoveUp?: () => void
-  onMoveDown?: () => void
-  canMoveUp?: boolean
-  canMoveDown?: boolean
 }
 
 export function ExerciseBlock({
@@ -30,10 +26,6 @@ export function ExerciseBlock({
   onDeleteSet,
   onRename,
   onDelete,
-  onMoveUp,
-  onMoveDown,
-  canMoveUp = false,
-  canMoveDown = false,
 }: ExerciseBlockProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -93,28 +85,6 @@ export function ExerciseBlock({
             }}
           >
             Rename
-          </button>
-          <button
-            type="button"
-            disabled={!canMoveUp}
-            className="py-3 text-left text-sm text-ink disabled:opacity-30"
-            onClick={() => {
-              onMoveUp?.()
-              setMenuOpen(false)
-            }}
-          >
-            Move up
-          </button>
-          <button
-            type="button"
-            disabled={!canMoveDown}
-            className="py-3 text-left text-sm text-ink disabled:opacity-30"
-            onClick={() => {
-              onMoveDown?.()
-              setMenuOpen(false)
-            }}
-          >
-            Move down
           </button>
           <button
             type="button"
