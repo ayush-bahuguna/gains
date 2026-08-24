@@ -47,6 +47,17 @@ export function Me() {
       <Button variant="primary" onClick={signOut} className="mt-4 w-full">
         Log out
       </Button>
+      <p className="mt-6 text-center text-xs text-graphite">
+        Exercise data by{' '}
+        <a
+          href="https://repdb.co"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+        >
+          RepDB (repdb.co)
+        </a>
+      </p>
     </div>
   )
 }

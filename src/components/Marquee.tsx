@@ -25,7 +25,7 @@ export function Marquee({ text, className = '' }: MarqueeProps) {
   }, [text])
 
   return (
-    <div ref={containerRef} className={`overflow-hidden ${className}`}>
+    <div ref={containerRef} className={`overflow-hidden ${className}`} style={{ fontFamily: 'var(--font-display)' }}>
       <span
         ref={textRef}
         className={`inline-block whitespace-nowrap ${overflow > 0 ? 'marquee-text' : ''}`}

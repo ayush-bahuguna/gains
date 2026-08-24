@@ -77,11 +77,29 @@ function finishAfterHundred(tokens: string[], from: number, base: number, start:
   return { value: base, consumed: from - start }
 }
 
+// "for" (the weight/reps separator, e.g. "eighty for eight") is a classic
+// speech-recognition homophone of "four", which is also a valid number word.
+// Sandwiched between two numbers it's essentially always the separator —
+// left alone it would silently merge into the preceding number (readNumberRun
+// treats "eighty four" as the compound 84) or leave three bare numbers where
+// only two slots are expected. Only rewrite it in that sandwiched position so
+// "four" used as an actual digit (e.g. "bench press four ten") is untouched.
+function disambiguateForFour(tokens: string[]): string[] {
+  return tokens.map((tok, i) => {
+    if (clean(tok) !== 'four') return tok
+    const prev = i > 0 ? clean(tokens[i - 1]) : ''
+    const next = i + 1 < tokens.length ? clean(tokens[i + 1]) : ''
+    const prevIsNumber = isNumberWord(prev) || /^\d+$/.test(prev)
+    const nextIsNumber = isNumberWord(next) || /^\d+$/.test(next)
+    return prevIsNumber && nextIsNumber ? 'for' : tok
+  })
+}
+
 // Speech recognition engines usually already normalize spoken numbers to
 // digits, but this isn't guaranteed across browsers — so parse word-numbers
 // too ("eighty five" -> "85") as a safety net, leaving anything else as-is.
 export function normalizeSpokenNumbers(text: string): string {
-  const tokens = text.split(/\s+/)
+  const tokens = disambiguateForFour(text.split(/\s+/))
   const out: string[] = []
   let i = 0
   while (i < tokens.length) {
@@ -193,6 +211,13 @@ export function parseVoiceCommand(raw: string): VoiceAction | null {
       reps: parseSlot(m[3]),
     }
   }
+
+  // Contains a digit but didn't fit the log-set grammar — a weight/reps
+  // attempt that just didn't parse. Don't silently fall back to treating it
+  // as a bare exercise name: that would select/create the exercise (fuzzy
+  // matching is lenient enough to still find it inside a garbled phrase)
+  // while quietly dropping the weight/reps with no feedback at all.
+  if (/\d/.test(stripped)) return null
 
   return { type: 'selectExercise', name: stripped || normalized }
 }

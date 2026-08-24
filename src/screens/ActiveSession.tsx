@@ -27,6 +27,7 @@ type ExerciseData = {
   id: string
   name: string
   position: number
+  exercise_db_id: string | null
   sets: SetRowData[]
 }
 
@@ -34,6 +35,9 @@ type ExerciseDefinition = {
   id: string
   name: string
   aliases: string[]
+  placeholder_image_url: string | null
+  placeholder_image_url_peak: string | null
+  description: string | null
 }
 
 function formatElapsed(ms: number) {
@@ -80,10 +84,12 @@ export function ActiveSession() {
           .maybeSingle(),
         supabase
           .from('exercises')
-          .select('id, name, position, sets(id, set_number, weight, reps)')
+          .select('id, name, position, exercise_db_id, sets(id, set_number, weight, reps)')
           .eq('session_id', id)
           .order('position', { ascending: true }),
-        supabase.from('exercise_definitions').select('id, name, aliases'),
+        supabase
+          .from('exercise_definitions')
+          .select('id, name, aliases, placeholder_image_url, placeholder_image_url_peak, description'),
       ])
 
       if (cancelled) return
@@ -103,6 +109,7 @@ export function ActiveSession() {
           id: e.id,
           name: e.name,
           position: e.position,
+          exercise_db_id: e.exercise_db_id,
           sets: (e.sets ?? [])
             .sort((a, b) => a.set_number - b.set_number)
             .map((s) => ({ id: s.id, setNumber: s.set_number, weight: s.weight, reps: s.reps })),
@@ -139,7 +146,13 @@ export function ActiveSession() {
       .select()
       .single()
     if (error || !data) return null
-    const newEx: ExerciseData = { id: data.id, name: data.name, position: data.position, sets: [] }
+    const newEx: ExerciseData = {
+      id: data.id,
+      name: data.name,
+      position: data.position,
+      exercise_db_id: data.exercise_db_id,
+      sets: [],
+    }
     setExercises((prev) => [...prev, newEx])
     return newEx
   }
@@ -348,7 +361,7 @@ export function ActiveSession() {
       const action = parseVoiceCommand(transcript)
       if (!action) {
         setVoiceState('error')
-        setVoiceMessage("Didn't catch that")
+        setVoiceMessage(transcript ? `Heard "${transcript}" — couldn't find weight & reps` : "Didn't catch that")
         return
       }
       const result = await runVoiceCommand(action)
@@ -504,6 +517,7 @@ export function ActiveSession() {
             key={ex.id}
             title={ex.name}
             sets={ex.sets}
+            definition={definitions.find((d) => d.id === ex.exercise_db_id) ?? null}
             onAddSet={() => addSet(i)}
             onUpdateSet={(setIndex, field, value) => updateSet(i, setIndex, field, value)}
             onDeleteSet={(setIndex) => deleteSet(i, setIndex)}

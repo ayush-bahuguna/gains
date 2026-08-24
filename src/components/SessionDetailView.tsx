@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Button } from './Button'
 import { Card } from './Card'
+import { Marquee } from './Marquee'
 import { Modal } from './Modal'
 import { NotesBox } from './NotesBox'
 import { SetTable } from './SetTable'
@@ -273,7 +274,7 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
 
       <Card>
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-xl font-bold text-ink">{session.name}</p>
+          <Marquee text={session.name} className="min-w-0 flex-1 text-xl font-bold text-ink" />
           <span
             className="shrink-0 rounded-full px-4 py-1.5 text-base font-bold text-ink"
             style={{ backgroundColor: 'var(--color-sage)' }}
@@ -342,8 +343,9 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
       <NotesBox
         placeholder="No notes"
         value={notesDraft}
-        onChange={(e) => setNotesDraft(e.target.value)}
-        onBlur={commitNotes}
+        onChange={variant === 'summary' ? undefined : (e) => setNotesDraft(e.target.value)}
+        onBlur={variant === 'summary' ? undefined : commitNotes}
+        readOnly={variant === 'summary'}
         bordered={false}
         collapsible={false}
         autoHeight

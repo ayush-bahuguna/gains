@@ -18,6 +18,15 @@ create table if not exists exercise_definitions (
   created_at timestamptz not null default now()
 );
 
+-- Added after the initial table creation — safe to re-run. Holds the
+-- "peak" pose image (start pose lives in placeholder_image_url) for
+-- exercises where the source dataset provides both.
+alter table exercise_definitions add column if not exists placeholder_image_url_peak text;
+
+-- Added after the initial table creation — safe to re-run. Short how-to +
+-- muscles-targeted blurb shown alongside the exercise.
+alter table exercise_definitions add column if not exists description text;
+
 alter table exercise_definitions enable row level security;
 
 drop policy if exists "exercise_definitions readable by authenticated users"
@@ -137,19 +146,48 @@ create policy "sets owner access"
 -- ─────────────────────────────────────────────────────────
 create table if not exists templates (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  user_id uuid references auth.users(id) on delete cascade default auth.uid(),
   name text not null,
+  is_default boolean not null default false,
   created_at timestamptz not null default now()
 );
 
+-- Added after the initial table creation — safe to re-run.
+alter table templates alter column user_id drop not null;
+alter table templates add column if not exists is_default boolean not null default false;
+
 alter table templates enable row level security;
 
+-- Default templates (user_id is null, is_default = true) are readable by
+-- everyone but only ever written by an admin via the SQL editor/service
+-- role, which bypasses RLS — no insert/update/delete policy grants them
+-- to regular users. Custom templates remain fully owner-controlled.
 drop policy if exists "templates owner access" on templates;
-create policy "templates owner access"
-  on templates for all
+drop policy if exists "templates select" on templates;
+drop policy if exists "templates insert" on templates;
+drop policy if exists "templates update" on templates;
+drop policy if exists "templates delete" on templates;
+
+create policy "templates select"
+  on templates for select
   to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (user_id = auth.uid() or is_default);
+
+create policy "templates insert"
+  on templates for insert
+  to authenticated
+  with check (user_id = auth.uid() and not is_default);
+
+create policy "templates update"
+  on templates for update
+  to authenticated
+  using (user_id = auth.uid() and not is_default)
+  with check (user_id = auth.uid() and not is_default);
+
+create policy "templates delete"
+  on templates for delete
+  to authenticated
+  using (user_id = auth.uid() and not is_default);
 
 -- ─────────────────────────────────────────────────────────
 -- template_exercises — exercise list for a template (no sets)
@@ -167,7 +205,24 @@ create index if not exists template_exercises_template_id_idx
 alter table template_exercises enable row level security;
 
 drop policy if exists "template_exercises owner access" on template_exercises;
-create policy "template_exercises owner access"
+drop policy if exists "template_exercises select" on template_exercises;
+drop policy if exists "template_exercises write" on template_exercises;
+
+create policy "template_exercises select"
+  on template_exercises for select
+  to authenticated
+  using (
+    exists (
+      select 1 from templates t
+      where t.id = template_exercises.template_id
+        and (t.user_id = auth.uid() or t.is_default)
+    )
+  );
+
+-- Insert/update/delete only reach templates owned by the caller — the
+-- owner check alone rules out default templates, since those have a
+-- null user_id.
+create policy "template_exercises write"
   on template_exercises for all
   to authenticated
   using (

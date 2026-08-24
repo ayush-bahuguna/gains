@@ -14,6 +14,7 @@ type SpeechRecognitionLike = {
   onend: (() => void) | null
   start: () => void
   stop: () => void
+  abort: () => void
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike
 
@@ -29,6 +30,18 @@ type UseSpeechRecognitionOptions = {
   onEnd?: () => void
 }
 
+// Some mobile/PWA browsers occasionally let a SpeechRecognition session hang
+// with no terminating event at all (no onresult, no onerror, no onend) after
+// repeated use in one page session. Nothing in the Web Speech API forces a
+// timeout, so without one the UI can get stuck on "listening" forever.
+const WATCHDOG_MS = 10000
+
+function detachHandlers(recognition: SpeechRecognitionLike) {
+  recognition.onresult = null
+  recognition.onerror = null
+  recognition.onend = null
+}
+
 // Wraps the browser's SpeechRecognition for a single spoken utterance at a
 // time (continuous: false) — the browser auto-stops on silence and fires
 // onresult/onend, which is a natural fit for one voice command per tap.
@@ -40,7 +53,15 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
   // a visible error instead of quietly resetting to idle.
   const handledRef = useRef(false)
   const manualStopRef = useRef(false)
+  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supported = getSpeechRecognitionCtor() !== null
+
+  const clearWatchdog = () => {
+    if (watchdogRef.current) {
+      clearTimeout(watchdogRef.current)
+      watchdogRef.current = null
+    }
+  }
 
   const start = useCallback(() => {
     const Ctor = getSpeechRecognitionCtor()
@@ -48,6 +69,19 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
       onError?.('Voice input is not supported in this browser.')
       return
     }
+    // A previous instance that never reached onend (the hang this watchdog
+    // guards against) could still be holding the mic or fire a stray event
+    // into the new session's state — kill it before starting a new one.
+    if (recognitionRef.current) {
+      const stale = recognitionRef.current
+      detachHandlers(stale)
+      try {
+        stale.stop()
+      } catch {
+        // already stopped/aborted — nothing to do
+      }
+    }
+    clearWatchdog()
     handledRef.current = false
     manualStopRef.current = false
     const recognition = new Ctor()
@@ -57,14 +91,18 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
     recognition.maxAlternatives = 1
     recognition.onresult = (event) => {
       handledRef.current = true
+      clearWatchdog()
       const transcript = event.results[0]?.[0]?.transcript ?? ''
       onResult(transcript)
     }
     recognition.onerror = (event) => {
       handledRef.current = true
+      clearWatchdog()
+      console.error('[voice] recognition error:', event.error)
       onError?.(event.error === 'no-speech' ? "Didn't catch that." : `Voice input error (${event.error}).`)
     }
     recognition.onend = () => {
+      clearWatchdog()
       if (!handledRef.current && !manualStopRef.current) {
         onError?.('No speech detected — check microphone access for this app and try again.')
       }
@@ -73,6 +111,19 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
     recognitionRef.current = recognition
     try {
       recognition.start()
+      watchdogRef.current = setTimeout(() => {
+        watchdogRef.current = null
+        if (recognitionRef.current !== recognition) return
+        console.warn('[voice] recognition timed out with no event')
+        detachHandlers(recognition)
+        try {
+          recognition.abort()
+        } catch {
+          // best-effort — the point is resetting our own state below either way
+        }
+        onError?.('Voice input timed out — tap the mic and try again.')
+        onEnd?.()
+      }, WATCHDOG_MS)
     } catch {
       onError?.('Could not start voice input — try again.')
     }
@@ -85,6 +136,7 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
 
   useEffect(
     () => () => {
+      clearWatchdog()
       recognitionRef.current?.stop()
     },
     [],

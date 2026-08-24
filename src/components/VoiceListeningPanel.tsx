@@ -114,7 +114,7 @@ const panelCopy: Record<Exclude<VoicePanelState, 'listening'>, { label: string; 
 export function VoicePanel({ state, onMicClick, message }: VoicePanelProps) {
   if (state === 'listening') {
     return (
-      <Card className="flex h-72 flex-col items-center justify-center gap-4">
+      <Card className="flex flex-col items-center gap-2">
         <p className="text-sm font-medium text-ink">Listening...</p>
         <Waveform />
         <ListeningMicButton onClick={onMicClick} />
@@ -125,7 +125,7 @@ export function VoicePanel({ state, onMicClick, message }: VoicePanelProps) {
 
   const copy = panelCopy[state]
   return (
-    <Card className="flex h-72 flex-col items-center justify-center gap-3">
+    <Card className="flex flex-col items-center gap-2">
       <MicButton state={state} onClick={onMicClick} />
       <div className="text-center">
         <p className="text-sm font-medium text-ink">{message ?? copy.label}</p>

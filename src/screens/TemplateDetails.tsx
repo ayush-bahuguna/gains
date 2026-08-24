@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
-import { Card } from '../components/Card'
+import type { ExerciseDefinitionInfo } from '../components/ExerciseBlock'
 import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil, IconTrash } from '../components/icons'
+import { Marquee } from '../components/Marquee'
 import { Modal } from '../components/Modal'
 import { SearchInput } from '../components/SearchInput'
+import { TemplateExerciseRow } from '../components/TemplateExerciseRow'
 import { TextInput } from '../components/TextInput'
 import { supabase } from '../lib/supabase'
 
 type TemplateData = { id: string; name: string }
-type TemplateExercise = { id: string; exercise_db_id: string; name: string }
-type ExerciseDefinition = { id: string; name: string; aliases: string[] }
+type TemplateExercise = { id: string; exercise_db_id: string; name: string } & ExerciseDefinitionInfo
+type ExerciseDefinition = { id: string; name: string; aliases: string[] } & ExerciseDefinitionInfo
 
 export function TemplateDetails() {
   const { id } = useParams<{ id: string }>()
@@ -38,10 +40,14 @@ export function TemplateDetails() {
         supabase.from('templates').select('id, name').eq('id', id).maybeSingle(),
         supabase
           .from('template_exercises')
-          .select('id, exercise_db_id, position, exercise_definitions(name)')
+          .select(
+            'id, exercise_db_id, position, exercise_definitions(name, placeholder_image_url, placeholder_image_url_peak, description)',
+          )
           .eq('template_id', id)
           .order('position', { ascending: true }),
-        supabase.from('exercise_definitions').select('id, name, aliases'),
+        supabase
+          .from('exercise_definitions')
+          .select('id, name, aliases, placeholder_image_url, placeholder_image_url_peak, description'),
       ])
 
       if (cancelled) return
@@ -55,12 +61,13 @@ export function TemplateDetails() {
       setTemplate(templateRow)
       setNameDraft(templateRow.name)
       setDefinitions(defRows ?? [])
+      type JoinedDef = { name: string } & ExerciseDefinitionInfo
       setExercises(
         (
           (exerciseRows ?? []) as unknown as {
             id: string
             exercise_db_id: string
-            exercise_definitions: { name: string }[] | { name: string } | null
+            exercise_definitions: JoinedDef[] | JoinedDef | null
           }[]
         ).map((e) => {
           const def = Array.isArray(e.exercise_definitions) ? e.exercise_definitions[0] : e.exercise_definitions
@@ -68,6 +75,9 @@ export function TemplateDetails() {
             id: e.id,
             exercise_db_id: e.exercise_db_id,
             name: def?.name ?? 'Unknown exercise',
+            placeholder_image_url: def?.placeholder_image_url ?? null,
+            placeholder_image_url_peak: def?.placeholder_image_url_peak ?? null,
+            description: def?.description ?? null,
           }
         }),
       )
@@ -96,7 +106,17 @@ export function TemplateDetails() {
       .select()
       .single()
     if (error || !data) return
-    setExercises((prev) => [...prev, { id: data.id, exercise_db_id: def.id, name: def.name }])
+    setExercises((prev) => [
+      ...prev,
+      {
+        id: data.id,
+        exercise_db_id: def.id,
+        name: def.name,
+        placeholder_image_url: def.placeholder_image_url,
+        placeholder_image_url_peak: def.placeholder_image_url_peak,
+        description: def.description,
+      },
+    ])
     setQuery('')
   }
 
@@ -187,13 +207,14 @@ export function TemplateDetails() {
           ) : (
             <button
               type="button"
-              className="flex items-center gap-1.5 text-left"
+              className="flex min-w-0 w-full items-center gap-1.5 text-left"
               onClick={() => {
                 setNameDraft(template.name)
                 setRenaming(true)
               }}
             >
-              <h1 className="truncate text-2xl font-bold text-ink">{template.name}</h1>
+              <h1 className="sr-only">{template.name}</h1>
+              <Marquee text={template.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
               <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
             </button>
           )}
@@ -239,17 +260,16 @@ export function TemplateDetails() {
         {exercises.length > 0 && (
           <div className="mt-3 space-y-3">
             {exercises.map((e, i) => (
-              <Card key={e.id} className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm text-ink">{e.name}</p>
-                <button
-                  type="button"
-                  onClick={() => removeExercise(i)}
-                  aria-label="Remove exercise"
-                  className="shrink-0 text-graphite"
-                >
-                  <IconTrash className="h-4 w-4" />
-                </button>
-              </Card>
+              <TemplateExerciseRow
+                key={e.id}
+                name={e.name}
+                definition={{
+                  placeholder_image_url: e.placeholder_image_url,
+                  placeholder_image_url_peak: e.placeholder_image_url_peak,
+                  description: e.description,
+                }}
+                onRemove={() => removeExercise(i)}
+              />
             ))}
           </div>
         )}

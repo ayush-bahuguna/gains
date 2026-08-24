@@ -67,10 +67,9 @@ export function NotesBox({
               ref={textareaRef}
               rows={autoHeight ? 1 : 4}
               value={value}
-              className={`no-scrollbar w-full bg-transparent pr-6 text-sm text-ink placeholder:text-graphite/60 focus:outline-none ${autoHeight ? 'resize-none overflow-hidden' : 'resize-none'} ${className}`}
+              className={`no-scrollbar w-full resize-none bg-transparent text-sm text-ink placeholder:text-graphite/60 focus:outline-none ${autoHeight ? 'overflow-hidden' : ''} ${className}`}
               {...rest}
             />
-            <span className="pointer-events-none absolute bottom-0 right-0 text-lg">🙂</span>
           </div>
         )}
       </div>
