@@ -321,7 +321,7 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
           return (
             <Card key={e.id}>
               <div className="flex items-center justify-between gap-2">
-                <h3 className="truncate text-lg font-bold text-ink">{e.name}</h3>
+                <p className="truncate text-lg font-bold text-ink">{e.name}</p>
                 {isPR && (
                   <span
                     className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-ink"
