@@ -179,13 +179,8 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
                       showStroke={false}
                     />
                     <span
-                      className="pointer-events-none relative flex items-center justify-center text-[10px] font-medium leading-none text-ink"
-                      style={{
-                        width: SQUARE_SIZE,
-                        height: SQUARE_SIZE,
-                        textShadow:
-                          '-1px -1px 0 var(--color-paper), 1px -1px 0 var(--color-paper), -1px 1px 0 var(--color-paper), 1px 1px 0 var(--color-paper)',
-                      }}
+                      className="pointer-events-none relative flex items-center justify-center text-[10px] font-medium leading-none text-white"
+                      style={{ width: SQUARE_SIZE, height: SQUARE_SIZE }}
                     >
                       {DAY_LETTERS[date.getDay()]}
                     </span>
