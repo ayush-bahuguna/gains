@@ -1,10 +1,42 @@
+import { useEffect, useState } from 'react'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { IconGoogle, IconUser } from '../components/icons'
+import { MonthActivityGraph } from '../components/MonthActivityGraph'
+import { daysInMonth, toISODate } from '../lib/date'
+import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
 export function Me() {
   const { user, loading, signInWithGoogle, signOut } = useAuthStore()
+
+  const today = new Date()
+  const [year, setYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth())
+  const [attendedDates, setAttendedDates] = useState<Set<string> | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+
+    async function load() {
+      const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
+      const end = toISODate(new Date(year, month, daysInMonth(year, month)))
+      const { data } = await supabase
+        .from('workout_sessions')
+        .select('date')
+        .not('end_time', 'is', null)
+        .gte('date', start)
+        .lte('date', end)
+      if (cancelled) return
+      setAttendedDates(new Set((data ?? []).map((r) => r.date)))
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [user, year, month])
 
   if (loading) {
     return (
@@ -44,6 +76,17 @@ export function Me() {
           <p className="truncate text-xs text-graphite">{user.email}</p>
         </div>
       </Card>
+      <div className="mt-4">
+        <MonthActivityGraph
+          year={year}
+          month={month}
+          attendedDates={attendedDates ?? new Set()}
+          onMonthChange={(y, m) => {
+            setYear(y)
+            setMonth(m)
+          }}
+        />
+      </div>
       <Button variant="primary" onClick={signOut} className="mt-4 w-full">
         Log out
       </Button>

@@ -24,6 +24,7 @@ import { EmptyStatesCheck } from './screens/dev/EmptyStatesCheck'
 import { TemplateCardCheck } from './screens/dev/TemplateCardCheck'
 import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
+import { CalendarCheck } from './screens/dev/CalendarCheck'
 import { KitchenSink } from './screens/dev/KitchenSink'
 
 function App() {
@@ -105,6 +106,7 @@ function App() {
       <Route path="/_dev/templatecard" element={<TemplateCardCheck />} />
       <Route path="/_dev/misc" element={<MiscCheck />} />
       <Route path="/_dev/voice" element={<VoiceCheck />} />
+      <Route path="/_dev/calendar" element={<CalendarCheck />} />
       <Route path="/_dev/components" element={<KitchenSink />} />
     </Routes>
   )

@@ -23,7 +23,7 @@ export function Modal({ isOpen, onClose, title, showCloseButton = false, childre
     >
       <div
         ref={ref}
-        className="relative max-h-[80vh] w-full max-w-sm overflow-y-auto p-5"
+        className="relative max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-[20px] bg-paper p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <Sketchy width={size.width} height={size.height} radius={20} fill="var(--color-paper)" />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Alert } from '../../components/Alert'
 import { BottomNav } from '../../components/BottomNav'
@@ -9,6 +9,7 @@ import { Chip } from '../../components/Chip'
 import { Dropdown } from '../../components/Dropdown'
 import { EmptyState } from '../../components/EmptyState'
 import { ExerciseBlock } from '../../components/ExerciseBlock'
+import { firstWeekdayOfMonth, toISODate } from '../../lib/date'
 import { IconButton } from '../../components/IconButton'
 import {
   IconDumbbell,
@@ -20,6 +21,7 @@ import {
   IconX,
 } from '../../components/icons'
 import { ListCard } from '../../components/ListCard'
+import { MonthActivityGraph } from '../../components/MonthActivityGraph'
 import { NotesBox } from '../../components/NotesBox'
 import { NumberStepper } from '../../components/NumberStepper'
 import { PaginationDots } from '../../components/PaginationDots'
@@ -54,6 +56,20 @@ export function KitchenSink() {
   const [radio, setRadio] = useState('a')
   const [weight, setWeight] = useState(80)
   const [voiceState, setVoiceState] = useState<VoicePanelState>('idle')
+
+  const today = new Date()
+  const [graphYear, setGraphYear] = useState(today.getFullYear())
+  const [graphMonth, setGraphMonth] = useState(today.getMonth())
+  const graphDates = useMemo(() => {
+    const firstWeekday = firstWeekdayOfMonth(graphYear, graphMonth)
+    const nthDayOfWeek = (target: number) => 1 + ((target - firstWeekday + 7) % 7)
+    return new Set([
+      toISODate(new Date(graphYear, graphMonth, 2)),
+      toISODate(new Date(graphYear, graphMonth, 3)),
+      toISODate(new Date(graphYear, graphMonth, nthDayOfWeek(6))), // first Saturday
+      toISODate(new Date(graphYear, graphMonth, nthDayOfWeek(0))), // first Sunday
+    ])
+  }, [graphYear, graphMonth])
 
   return (
     <div className="mx-auto max-w-[480px] space-y-10 border-x border-ink/10 bg-paper p-6 pb-28">
@@ -174,6 +190,18 @@ export function KitchenSink() {
         <Card>
           <p className="text-sm text-ink">Plain card content.</p>
         </Card>
+      </Section>
+
+      <Section title="Calendar / Activity Graph (§19)">
+        <MonthActivityGraph
+          year={graphYear}
+          month={graphMonth}
+          attendedDates={graphDates}
+          onMonthChange={(y, m) => {
+            setGraphYear(y)
+            setGraphMonth(m)
+          }}
+        />
       </Section>
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px]">
