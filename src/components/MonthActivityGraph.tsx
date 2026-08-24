@@ -15,7 +15,7 @@ type MonthActivityGraphProps = {
   onMonthChange?: (year: number, month: number) => void
 }
 
-const SQUARE_SIZE = 24
+const SQUARE_SIZE = 32
 const GAP = 8
 const DRAG_COMMIT_THRESHOLD = 70
 
@@ -179,7 +179,7 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
                       showStroke={false}
                     />
                     <span
-                      className="pointer-events-none relative flex items-center justify-center text-[10px] font-medium leading-none text-white"
+                      className="pointer-events-none relative flex items-center justify-center text-[13px] font-medium leading-none text-white"
                       style={{ width: SQUARE_SIZE, height: SQUARE_SIZE }}
                     >
                       {DAY_LETTERS[date.getDay()]}
