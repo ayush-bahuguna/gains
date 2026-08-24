@@ -1,32 +1,38 @@
-# React + TypeScript + Vite
+# Gains — Workout Journal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A digital workout notebook, not a fitness tracker. Voice-first logging, no chatbot framing — see `docs/workout-journal-build-spec.md` for the full product vision and screen-by-screen spec.
 
-Currently, two official plugins are available:
+Built with Vite + React 19 + TypeScript, Tailwind CSS v4, and Supabase (Postgres + Auth + Row Level Security) as the only backend. The hand-drawn "notebook" look is rendered live with [rough.js](https://roughjs.com/), not static assets.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Getting started
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+1. Copy `.env.example` to `.env.local` and fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (and optionally `VITE_GIPHY_API_KEY` for the post-workout motivation GIF).
+2. Follow `supabase/README.md` to create the Supabase project, run `supabase/schema.sql`, seed exercise/template data, and set up Google OAuth — the app only supports signing in with Google.
+
+## Scripts
+
+| Command | Does |
+|---|---|
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Type-check (`tsc -b`) and produce a production build |
+| `npm run lint` | Run oxlint |
+| `npm run format` | Format the repo with Prettier |
+| `npm run preview` | Serve the production build locally |
+
+There's no test suite — `npm run build` and `npm run lint` are the verification steps to run before committing.
+
+## Project layout
+
+- `src/screens/` — routed pages (Journal, Templates, History, Me, active/summary session views)
+- `src/screens/dev/` — isolated, unauthenticated `/_dev/*` screens for building/QA-ing one component at a time with mock data (see `CLAUDE.md`)
+- `src/components/` — shared UI, including the `Sketchy` rough.js wrapper everything else is built on
+- `src/lib/` — Supabase client, date helpers, voice parsing/recognition, misc utilities
+- `supabase/` — hand-maintained schema and seed SQL (no migration tooling — see `supabase/README.md`)
+- `docs/` — product/design spec
+
+For architecture notes, established conventions, and known gotchas (the kind of thing that takes a while to rediscover from scratch), see `CLAUDE.md`.
