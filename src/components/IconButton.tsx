@@ -10,7 +10,7 @@ type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const toneFill: Record<'neutral' | 'danger', { fill: string; pressed: string }> = {
   neutral: { fill: 'var(--color-mist)', pressed: '#c9c4b5' },
-  danger: { fill: 'var(--color-coral)', pressed: '#e56f61' },
+  danger: { fill: 'var(--color-coral)', pressed: '#c04a38' },
 }
 
 export function IconButton({ icon, tone = 'neutral', className = '', disabled, ...rest }: IconButtonProps) {

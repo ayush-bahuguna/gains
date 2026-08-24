@@ -6,15 +6,15 @@
   --color-paper: #f7f4ec;
   --color-ink: #1e1e1e;
   --color-graphite: #5c5c5c;
-  --color-sage: #b7c9b1;
+  --color-sage: #6a9660;
   --color-sky: #a8d5e2;
   --color-sun: #ffd166;
-  --color-coral: #ff887a;
+  --color-coral: #dc5a45;
   --color-lavender: #ddb7f8;
   --color-highlight: #fff4a3;
   --color-mist: #dcd8cc;
   /* Activity graph only — distinct from --color-sun (pale yellow) and
-     --color-sage (pale green): a rich gold and a saturated dark green. */
+     --color-sage: a rich gold and a still-darker, blue-leaning green. */
   --color-gold: #d4af37;
   --color-forest: #3f6f4d;
 

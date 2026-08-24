@@ -26,6 +26,8 @@ function dayColor(dayOfWeek: number, attended: boolean, isFuture: boolean): stri
   return attended ? 'var(--color-sage)' : 'var(--color-coral)'
 }
 
+const DAY_LETTERS = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa']
+
 export function MonthActivityGraph({ year, month, attendedDates, today, onMonthChange }: MonthActivityGraphProps) {
   const now = today ?? new Date()
   const atCurrentMonth = isSameMonth({ year, month }, { year: now.getFullYear(), month: now.getMonth() })
@@ -176,6 +178,17 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
                       fillWeight={2}
                       showStroke={false}
                     />
+                    <span
+                      className="pointer-events-none relative flex items-center justify-center text-[10px] font-medium leading-none text-ink"
+                      style={{
+                        width: SQUARE_SIZE,
+                        height: SQUARE_SIZE,
+                        textShadow:
+                          '-1px -1px 0 var(--color-paper), 1px -1px 0 var(--color-paper), -1px 1px 0 var(--color-paper), 1px 1px 0 var(--color-paper)',
+                      }}
+                    >
+                      {DAY_LETTERS[date.getDay()]}
+                    </span>
                   </div>
                 )
               })}
