@@ -15,7 +15,7 @@ type MonthActivityGraphProps = {
   onMonthChange?: (year: number, month: number) => void
 }
 
-const SQUARE_SIZE = 32
+const SQUARE_SIZE = 40
 const GAP = 8
 const DRAG_COMMIT_THRESHOLD = 70
 
