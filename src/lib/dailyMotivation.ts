@@ -62,3 +62,17 @@ export async function getDailyMotivation(): Promise<DailyMotivation | null> {
   writeCache(data)
   return data
 }
+
+// Bypasses the cache and picks a new gif/quote, overwriting today's cached
+// pick (so it stays the one shown for the rest of the day). Used by the
+// long-press "reload" gesture on the Journal Home gif. Same never-throws
+// contract as getDailyMotivation — returns null on failure, callers just
+// keep showing whatever they already had.
+export async function refreshDailyMotivation(): Promise<DailyMotivation | null> {
+  const gifUrl = await fetchRandomGif()
+  if (!gifUrl) return null
+
+  const data: DailyMotivation = { date: todayKey(), gifUrl, quote: pickRandomQuote() }
+  writeCache(data)
+  return data
+}

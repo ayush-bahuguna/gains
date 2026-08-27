@@ -5,6 +5,7 @@ import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { IconDumbbell, IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
+import { MotivationGif } from '../components/MotivationGif'
 import { TemplateCard } from '../components/TemplateCard'
 import { getDailyMotivation, type DailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
@@ -137,11 +138,7 @@ export function JournalHome() {
         <p className="mt-1 text-sm text-graphite">Ready to get stronger today?</p>
         {motivation && (
           <div className="mt-3">
-            <img
-              src={motivation.gifUrl}
-              alt=""
-              className="w-full rounded-2xl border border-ink/10 object-cover"
-            />
+            <MotivationGif motivation={motivation} onChange={setMotivation} />
             <p className="mt-2 text-sm italic text-graphite">"{motivation.quote}"</p>
           </div>
         )}

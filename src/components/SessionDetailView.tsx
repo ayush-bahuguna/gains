@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getDailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -160,9 +161,14 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
   async function repeatWorkout() {
     if (!session || repeating) return
     setRepeating(true)
+    const motivation = await getDailyMotivation()
     const { data: newSession, error } = await supabase
       .from('workout_sessions')
-      .insert({ name: session.name })
+      .insert({
+        name: session.name,
+        motivation_gif_url: motivation?.gifUrl ?? null,
+        motivation_quote: motivation?.quote ?? null,
+      })
       .select()
       .single()
     if (error || !newSession) {
@@ -185,9 +191,14 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
   async function duplicateSession() {
     if (!session || duplicating) return
     setDuplicating(true)
+    const motivation = await getDailyMotivation()
     const { data: newSession, error } = await supabase
       .from('workout_sessions')
-      .insert({ name: session.name })
+      .insert({
+        name: session.name,
+        motivation_gif_url: motivation?.gifUrl ?? null,
+        motivation_quote: motivation?.quote ?? null,
+      })
       .select()
       .single()
     if (error || !newSession) {

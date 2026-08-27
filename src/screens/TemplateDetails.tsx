@@ -9,6 +9,7 @@ import { Modal } from '../components/Modal'
 import { SearchInput } from '../components/SearchInput'
 import { TemplateExerciseRow } from '../components/TemplateExerciseRow'
 import { TextInput } from '../components/TextInput'
+import { getDailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
 
 type TemplateData = { id: string; name: string }
@@ -140,9 +141,14 @@ export function TemplateDetails() {
   async function startSessionFromTemplate() {
     if (!template || starting) return
     setStarting(true)
+    const motivation = await getDailyMotivation()
     const { data: newSession, error } = await supabase
       .from('workout_sessions')
-      .insert({ name: template.name })
+      .insert({
+        name: template.name,
+        motivation_gif_url: motivation?.gifUrl ?? null,
+        motivation_quote: motivation?.quote ?? null,
+      })
       .select()
       .single()
     if (error || !newSession) {
