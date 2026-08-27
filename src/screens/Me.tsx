@@ -63,44 +63,49 @@ export function Me() {
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
   return (
-    <div className="p-6">
-      <h1 className="mb-4 text-3xl font-bold text-ink">Me</h1>
-      <Card className="flex items-center gap-3">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full" />
-        ) : (
-          <IconUser className="h-6 w-6 shrink-0 text-ink" />
-        )}
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-ink">{name}</p>
-          <p className="truncate text-xs text-graphite">{user.email}</p>
-        </div>
-      </Card>
-      <div className="mt-4">
-        <MonthActivityGraph
-          year={year}
-          month={month}
-          attendedDates={attendedDates ?? new Set()}
-          onMonthChange={(y, m) => {
-            setYear(y)
-            setMonth(m)
-          }}
-        />
+    <div>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
+        <h1 className="text-3xl font-bold text-ink">Me</h1>
       </div>
-      <Button variant="primary" onClick={signOut} className="mt-4 w-full">
-        Log out
-      </Button>
-      <p className="mt-6 text-center text-xs text-graphite">
-        Exercise data by{' '}
-        <a
-          href="https://repdb.co"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline"
-        >
-          RepDB (repdb.co)
-        </a>
-      </p>
+
+      <div className="px-6 pb-6 pt-4">
+        <Card className="flex items-center gap-3">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full" />
+          ) : (
+            <IconUser className="h-6 w-6 shrink-0 text-ink" />
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-ink">{name}</p>
+            <p className="truncate text-xs text-graphite">{user.email}</p>
+          </div>
+        </Card>
+        <div className="mt-4">
+          <MonthActivityGraph
+            year={year}
+            month={month}
+            attendedDates={attendedDates ?? new Set()}
+            onMonthChange={(y, m) => {
+              setYear(y)
+              setMonth(m)
+            }}
+          />
+        </div>
+        <Button variant="primary" onClick={signOut} className="mt-4 w-full">
+          Log out
+        </Button>
+        <p className="mt-6 text-center text-xs text-graphite">
+          Exercise data by{' '}
+          <a
+            href="https://repdb.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            RepDB (repdb.co)
+          </a>
+        </p>
+      </div>
     </div>
   )
 }

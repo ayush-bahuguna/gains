@@ -188,104 +188,108 @@ export function TemplateDetails() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center gap-2">
-        <IconButton
-          icon={<IconChevronLeft className="h-4 w-4" />}
-          onClick={() => navigate('/templates')}
-          aria-label="Back"
-        />
-        <div className="min-w-0 flex-1">
-          {renaming ? (
-            <TextInput
-              autoFocus
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              onBlur={submitRename}
-              onKeyDown={(e) => e.key === 'Enter' && submitRename()}
-            />
-          ) : (
-            <button
-              type="button"
-              className="flex min-w-0 w-full items-center gap-1.5 text-left"
-              onClick={() => {
-                setNameDraft(template.name)
-                setRenaming(true)
-              }}
-            >
-              <h1 className="sr-only">{template.name}</h1>
-              <Marquee text={template.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
-              <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
-            </button>
-          )}
+    <div>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 space-y-4 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
+        <div className="flex items-center gap-2">
+          <IconButton
+            icon={<IconChevronLeft className="h-4 w-4" />}
+            onClick={() => navigate('/templates')}
+            aria-label="Back"
+          />
+          <div className="min-w-0 flex-1">
+            {renaming ? (
+              <TextInput
+                autoFocus
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={submitRename}
+                onKeyDown={(e) => e.key === 'Enter' && submitRename()}
+              />
+            ) : (
+              <button
+                type="button"
+                className="flex min-w-0 w-full items-center gap-1.5 text-left"
+                onClick={() => {
+                  setNameDraft(template.name)
+                  setRenaming(true)
+                }}
+              >
+                <h1 className="sr-only">{template.name}</h1>
+                <Marquee text={template.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
+                <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
+              </button>
+            )}
+          </div>
+          <IconButton
+            icon={<IconTrash className="h-4 w-4" />}
+            tone="danger"
+            onClick={() => setConfirmDelete(true)}
+            aria-label="Delete template"
+          />
         </div>
-        <IconButton
-          icon={<IconTrash className="h-4 w-4" />}
-          tone="danger"
-          onClick={() => setConfirmDelete(true)}
-          aria-label="Delete template"
-        />
+
+        <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
+          {starting ? 'Starting...' : 'Start Session'}
+        </Button>
       </div>
 
-      <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
-        {starting ? 'Starting...' : 'Start Session'}
-      </Button>
-
-      <div>
-        <p className="mb-2 text-lg font-bold text-ink">Exercises</p>
-        <div className="relative">
-          <SearchInput
-            placeholder="Search to add an exercise"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {results.length > 0 && (
-            <div className="absolute inset-x-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-ink/15 bg-paper p-2 shadow-lg">
-              <div className="flex flex-col divide-y divide-ink/10">
-                {results.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => addExercise(r)}
-                    className="rounded-xl px-2 py-2.5 text-left text-sm text-ink active:bg-ink/5"
-                  >
-                    {r.name}
-                  </button>
-                ))}
+      <div className="space-y-6 px-6 pb-6 pt-4">
+        <div>
+          <p className="mb-2 text-lg font-bold text-ink">Exercises</p>
+          <div className="relative">
+            <SearchInput
+              placeholder="Search to add an exercise"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {results.length > 0 && (
+              <div className="absolute inset-x-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-ink/15 bg-paper p-2 shadow-lg">
+                <div className="flex flex-col divide-y divide-ink/10">
+                  {results.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => addExercise(r)}
+                      className="rounded-xl px-2 py-2.5 text-left text-sm text-ink active:bg-ink/5"
+                    >
+                      {r.name}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
+          </div>
+
+          {exercises.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {exercises.map((e, i) => (
+                <TemplateExerciseRow
+                  key={e.id}
+                  name={e.name}
+                  definition={{
+                    placeholder_image_url: e.placeholder_image_url,
+                    placeholder_image_url_peak: e.placeholder_image_url_peak,
+                    description: e.description,
+                  }}
+                  onRemove={() => removeExercise(i)}
+                />
+              ))}
             </div>
           )}
         </div>
 
-        {exercises.length > 0 && (
-          <div className="mt-3 space-y-3">
-            {exercises.map((e, i) => (
-              <TemplateExerciseRow
-                key={e.id}
-                name={e.name}
-                definition={{
-                  placeholder_image_url: e.placeholder_image_url,
-                  placeholder_image_url_peak: e.placeholder_image_url_peak,
-                  description: e.description,
-                }}
-                onRemove={() => removeExercise(i)}
-              />
-            ))}
+        <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete template?">
+          <p>This permanently removes "{template.name}".</p>
+          <div className="mt-5 flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={deleteTemplate}>
+              Delete
+            </Button>
           </div>
-        )}
+        </Modal>
       </div>
-
-      <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete template?">
-        <p>This permanently removes "{template.name}".</p>
-        <div className="mt-5 flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={deleteTemplate}>
-            Delete
-          </Button>
-        </div>
-      </Modal>
     </div>
   )
 }

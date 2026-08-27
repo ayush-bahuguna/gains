@@ -71,7 +71,6 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
   const [historicalMax, setHistoricalMax] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [notesDraft, setNotesDraft] = useState('')
   const [repeating, setRepeating] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -108,7 +107,6 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
       }
 
       setSession(sessionRow)
-      setNotesDraft(sessionRow.notes)
       const ex: ExerciseData[] = (exerciseRows ?? []).map((e) => ({
         id: e.id,
         name: e.name,
@@ -158,11 +156,6 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
     }).length
     return { totalExercises: exercises.length, totalSets, totalVolume, prCount }
   }, [exercises, historicalMax])
-
-  function commitNotes() {
-    if (!session) return
-    supabase.from('workout_sessions').update({ notes: notesDraft }).eq('id', session.id).then()
-  }
 
   async function repeatWorkout() {
     if (!session || repeating) return
@@ -342,10 +335,8 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
 
       <NotesBox
         placeholder="No notes"
-        value={notesDraft}
-        onChange={variant === 'summary' ? undefined : (e) => setNotesDraft(e.target.value)}
-        onBlur={variant === 'summary' ? undefined : commitNotes}
-        readOnly={variant === 'summary'}
+        value={session.notes}
+        readOnly
         bordered={false}
         collapsible={false}
         autoHeight

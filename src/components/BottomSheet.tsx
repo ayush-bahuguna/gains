@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useMeasure } from '../lib/useMeasure'
 import { Sketchy } from './Sketchy'
 
@@ -13,7 +14,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
   const [ref, size] = useMeasure<HTMLDivElement>()
 
   if (!isOpen) return null
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/40" onClick={onClose}>
       <div
         ref={ref}
@@ -27,6 +28,7 @@ export function BottomSheet({ isOpen, onClose, title, children }: BottomSheetPro
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -66,8 +66,8 @@ export function TemplatesList() {
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 flex items-center justify-between border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
         <h1 className="text-2xl font-bold text-ink">Templates</h1>
         <IconButton
           icon={<IconPlus className="h-4 w-4" />}
@@ -77,30 +77,32 @@ export function TemplatesList() {
         />
       </div>
 
-      {loading ? (
-        <p className="text-sm text-graphite">Loading...</p>
-      ) : templates.length === 0 ? (
-        <EmptyState
-          icon={<IconDumbbell className="h-6 w-6" />}
-          title="No templates yet"
-          subtitle="Create one to speed up logging"
-          actionLabel="New Template"
-          onAction={createTemplate}
-        />
-      ) : (
-        <div className="space-y-3">
-          {templates.map((t) => (
-            <TemplateCard
-              key={t.id}
-              icon={<IconDumbbell className="h-4 w-4" />}
-              title={t.name}
-              exercisePreview={t.exerciseNames.length > 0 ? t.exerciseNames.join(', ') : 'No exercises yet'}
-              exerciseCount={t.exerciseNames.length}
-              onClick={() => navigate(`/templates/${t.id}`)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="space-y-4 px-6 pb-6 pt-4">
+        {loading ? (
+          <p className="text-sm text-graphite">Loading...</p>
+        ) : templates.length === 0 ? (
+          <EmptyState
+            icon={<IconDumbbell className="h-6 w-6" />}
+            title="No templates yet"
+            subtitle="Create one to speed up logging"
+            actionLabel="New Template"
+            onAction={createTemplate}
+          />
+        ) : (
+          <div className="space-y-3">
+            {templates.map((t) => (
+              <TemplateCard
+                key={t.id}
+                icon={<IconDumbbell className="h-4 w-4" />}
+                title={t.name}
+                exercisePreview={t.exerciseNames.length > 0 ? t.exerciseNames.join(', ') : 'No exercises yet'}
+                exerciseCount={t.exerciseNames.length}
+                onClick={() => navigate(`/templates/${t.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

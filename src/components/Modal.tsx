@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useMeasure } from '../lib/useMeasure'
 import { IconButton } from './IconButton'
 import { IconX } from './icons'
@@ -16,7 +17,7 @@ export function Modal({ isOpen, onClose, title, showCloseButton = false, childre
   const [ref, size] = useMeasure<HTMLDivElement>()
 
   if (!isOpen) return null
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-6"
       onClick={onClose}
@@ -39,6 +40,7 @@ export function Modal({ isOpen, onClose, title, showCloseButton = false, childre
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

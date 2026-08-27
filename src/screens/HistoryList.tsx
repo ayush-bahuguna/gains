@@ -79,53 +79,57 @@ export function HistoryList() {
   }, [filter])
 
   return (
-    <div className="space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-ink">History</h1>
+    <div>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 space-y-4 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
+        <h1 className="text-2xl font-bold text-ink">History</h1>
 
-      <div className="flex gap-2 overflow-x-auto">
-        {filters.map((f) => (
-          <Chip
-            key={f.key}
-            variant="filter"
-            selected={filter === f.key}
-            onClick={() => setFilter(f.key)}
-            className="cursor-pointer whitespace-nowrap"
-          >
-            {f.label}
-          </Chip>
-        ))}
+        <div className="flex gap-2 overflow-x-auto">
+          {filters.map((f) => (
+            <Chip
+              key={f.key}
+              variant="filter"
+              selected={filter === f.key}
+              onClick={() => setFilter(f.key)}
+              className="cursor-pointer whitespace-nowrap"
+            >
+              {f.label}
+            </Chip>
+          ))}
+        </div>
       </div>
 
-      {loading ? (
-        <p className="text-sm text-graphite">Loading...</p>
-      ) : sessions.length === 0 ? (
-        <EmptyState
-          icon={<IconNotebook className="h-6 w-6" />}
-          title="No history yet"
-          subtitle="Your past workouts will appear here"
-          actionLabel="Start Session"
-          onAction={() => navigate('/journal')}
-        />
-      ) : (
-        <div className="space-y-3">
-          {sessions.map((s) => {
-            const durationMs = new Date(s.end_time).getTime() - new Date(s.start_time).getTime()
-            const dateLabel = new Date(s.date).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })
-            return (
-              <ListCard
-                key={s.id}
-                icon={<IconNotebook className="h-5 w-5" />}
-                title={s.name}
-                subtitle={`${dateLabel} · ${formatDuration(durationMs)} · ${s.exerciseCount} exercises`}
-                onClick={() => navigate(`/history/${s.id}`)}
-              />
-            )
-          })}
-        </div>
-      )}
+      <div className="space-y-4 px-6 pb-6 pt-4">
+        {loading ? (
+          <p className="text-sm text-graphite">Loading...</p>
+        ) : sessions.length === 0 ? (
+          <EmptyState
+            icon={<IconNotebook className="h-6 w-6" />}
+            title="No history yet"
+            subtitle="Your past workouts will appear here"
+            actionLabel="Start Session"
+            onAction={() => navigate('/journal')}
+          />
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((s) => {
+              const durationMs = new Date(s.end_time).getTime() - new Date(s.start_time).getTime()
+              const dateLabel = new Date(s.date).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })
+              return (
+                <ListCard
+                  key={s.id}
+                  icon={<IconNotebook className="h-5 w-5" />}
+                  title={s.name}
+                  subtitle={`${dateLabel} · ${formatDuration(durationMs)} · ${s.exerciseCount} exercises`}
+                  onClick={() => navigate(`/history/${s.id}`)}
+                />
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
