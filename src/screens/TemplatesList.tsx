@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
+import { HeaderDivider } from '../components/HeaderDivider'
 import { IconButton } from '../components/IconButton'
 import { IconDumbbell, IconPlus } from '../components/icons'
 import { TemplateCard } from '../components/TemplateCard'
@@ -67,14 +68,17 @@ export function TemplatesList() {
 
   return (
     <div>
-      <div className="sticky top-[env(safe-area-inset-top)] z-30 flex items-center justify-between border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
-        <h1 className="text-2xl font-bold text-ink">Templates</h1>
-        <IconButton
-          icon={<IconPlus className="h-4 w-4" />}
-          onClick={createTemplate}
-          disabled={creating}
-          aria-label="New template"
-        />
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
+        <div className="flex items-center justify-between px-6 pb-4 pt-6">
+          <h1 className="text-2xl font-bold text-ink">Templates</h1>
+          <IconButton
+            icon={<IconPlus className="h-4 w-4" />}
+            onClick={createTemplate}
+            disabled={creating}
+            aria-label="New template"
+          />
+        </div>
+        <HeaderDivider />
       </div>
 
       <div className="space-y-4 px-6 pb-6 pt-4">

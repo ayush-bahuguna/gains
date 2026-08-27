@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import type { ExerciseDefinitionInfo } from '../components/ExerciseBlock'
+import { HeaderDivider } from '../components/HeaderDivider'
 import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil, IconTrash } from '../components/icons'
 import { Marquee } from '../components/Marquee'
@@ -195,48 +196,51 @@ export function TemplateDetails() {
 
   return (
     <div>
-      <div className="sticky top-[env(safe-area-inset-top)] z-30 space-y-4 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
-        <div className="flex items-center gap-2">
-          <IconButton
-            icon={<IconChevronLeft className="h-4 w-4" />}
-            onClick={() => navigate('/templates')}
-            aria-label="Back"
-          />
-          <div className="min-w-0 flex-1">
-            {renaming ? (
-              <TextInput
-                autoFocus
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                onBlur={submitRename}
-                onKeyDown={(e) => e.key === 'Enter' && submitRename()}
-              />
-            ) : (
-              <button
-                type="button"
-                className="flex min-w-0 w-full items-center gap-1.5 text-left"
-                onClick={() => {
-                  setNameDraft(template.name)
-                  setRenaming(true)
-                }}
-              >
-                <h1 className="sr-only">{template.name}</h1>
-                <Marquee text={template.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
-                <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
-              </button>
-            )}
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
+        <div className="space-y-4 px-6 pb-4 pt-6">
+          <div className="flex items-center gap-2">
+            <IconButton
+              icon={<IconChevronLeft className="h-4 w-4" />}
+              onClick={() => navigate('/templates')}
+              aria-label="Back"
+            />
+            <div className="min-w-0 flex-1">
+              {renaming ? (
+                <TextInput
+                  autoFocus
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onBlur={submitRename}
+                  onKeyDown={(e) => e.key === 'Enter' && submitRename()}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="flex min-w-0 w-full items-center gap-1.5 text-left"
+                  onClick={() => {
+                    setNameDraft(template.name)
+                    setRenaming(true)
+                  }}
+                >
+                  <h1 className="sr-only">{template.name}</h1>
+                  <Marquee text={template.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
+                  <IconPencil className="h-3.5 w-3.5 shrink-0 text-graphite" />
+                </button>
+              )}
+            </div>
+            <IconButton
+              icon={<IconTrash className="h-4 w-4" />}
+              tone="danger"
+              onClick={() => setConfirmDelete(true)}
+              aria-label="Delete template"
+            />
           </div>
-          <IconButton
-            icon={<IconTrash className="h-4 w-4" />}
-            tone="danger"
-            onClick={() => setConfirmDelete(true)}
-            aria-label="Delete template"
-          />
-        </div>
 
-        <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
-          {starting ? 'Starting...' : 'Start Session'}
-        </Button>
+          <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
+            {starting ? 'Starting...' : 'Start Session'}
+          </Button>
+        </div>
+        <HeaderDivider />
       </div>
 
       <div className="space-y-6 px-6 pb-6 pt-4">

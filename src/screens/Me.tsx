@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
+import { HeaderDivider } from '../components/HeaderDivider'
 import { IconGoogle, IconUser } from '../components/icons'
 import { MonthActivityGraph } from '../components/MonthActivityGraph'
 import { daysInMonth, toISODate } from '../lib/date'
@@ -64,8 +65,11 @@ export function Me() {
 
   return (
     <div>
-      <div className="sticky top-[env(safe-area-inset-top)] z-30 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
-        <h1 className="text-3xl font-bold text-ink">Me</h1>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
+        <div className="px-6 pb-4 pt-6">
+          <h1 className="text-3xl font-bold text-ink">Me</h1>
+        </div>
+        <HeaderDivider />
       </div>
 
       <div className="px-6 pb-6 pt-4">

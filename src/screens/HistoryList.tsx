@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Chip } from '../components/Chip'
 import { EmptyState } from '../components/EmptyState'
+import { HeaderDivider } from '../components/HeaderDivider'
 import { IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
 import { supabase } from '../lib/supabase'
@@ -80,22 +81,25 @@ export function HistoryList() {
 
   return (
     <div>
-      <div className="sticky top-[env(safe-area-inset-top)] z-30 space-y-4 border-b border-ink/10 bg-paper px-6 pb-4 pt-6">
-        <h1 className="text-2xl font-bold text-ink">History</h1>
+      <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
+        <div className="space-y-4 px-6 pb-4 pt-6">
+          <h1 className="text-2xl font-bold text-ink">History</h1>
 
-        <div className="flex gap-2 overflow-x-auto">
-          {filters.map((f) => (
-            <Chip
-              key={f.key}
-              variant="filter"
-              selected={filter === f.key}
-              onClick={() => setFilter(f.key)}
-              className="cursor-pointer whitespace-nowrap"
-            >
-              {f.label}
-            </Chip>
-          ))}
+          <div className="flex gap-2 overflow-x-auto">
+            {filters.map((f) => (
+              <Chip
+                key={f.key}
+                variant="filter"
+                selected={filter === f.key}
+                onClick={() => setFilter(f.key)}
+                className="cursor-pointer whitespace-nowrap"
+              >
+                {f.label}
+              </Chip>
+            ))}
+          </div>
         </div>
+        <HeaderDivider />
       </div>
 
       <div className="space-y-4 px-6 pb-6 pt-4">
