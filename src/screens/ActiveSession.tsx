@@ -190,6 +190,15 @@ export function ActiveSession() {
       .then()
   }
 
+  function updateSetWeightAndReps(exerciseId: string, setId: string, weight: number, reps: number) {
+    setExercises((prev) =>
+      prev.map((ex) =>
+        ex.id === exerciseId ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, weight, reps } : s)) } : ex,
+      ),
+    )
+    supabase.from('sets').update({ weight, reps }).eq('id', setId).then()
+  }
+
   async function deleteSetById(exerciseId: string, setId: string) {
     setExercises((prev) => prev.map((ex) => (ex.id === exerciseId ? { ...ex, sets: ex.sets.filter((s) => s.id !== setId) } : ex)))
     await supabase.from('sets').delete().eq('id', setId)
@@ -343,14 +352,25 @@ export function ActiveSession() {
         if (weightValue === null || repsValue === null) return { ok: false, message: 'No previous set to reference' }
 
         const finalExercise = exercise
-        const newSet = await insertSetAndAttach(finalExercise.id, weightValue, repsValue)
-        if (created) {
-          undoStackRef.current.push(async () => {
-            await deleteExerciseById(finalExercise.id)
-            setCurrentExerciseId(null)
-          })
-        } else if (newSet?.id) {
-          undoStackRef.current.push(async () => deleteSetById(finalExercise.id, newSet.id!))
+        // Fill the first still-blank set (from manually tapping "+ Add set",
+        // possibly several times in a row) before ever inserting a new one —
+        // each voice log advances to the next blank set in order, so saying
+        // the numbers repeatedly fills them one at a time.
+        const emptySet = finalExercise.sets.find((s) => s.id && s.weight === 0 && s.reps === 0)
+        if (emptySet?.id) {
+          const filledSetId = emptySet.id
+          updateSetWeightAndReps(finalExercise.id, filledSetId, weightValue, repsValue)
+          undoStackRef.current.push(() => updateSetWeightAndReps(finalExercise.id, filledSetId, 0, 0))
+        } else {
+          const newSet = await insertSetAndAttach(finalExercise.id, weightValue, repsValue)
+          if (created) {
+            undoStackRef.current.push(async () => {
+              await deleteExerciseById(finalExercise.id)
+              setCurrentExerciseId(null)
+            })
+          } else if (newSet?.id) {
+            undoStackRef.current.push(async () => deleteSetById(finalExercise.id, newSet.id!))
+          }
         }
         const namePart =
           created && !matchedDefinition ? `Created "${finalExercise.name}" (no match found)` : finalExercise.name
