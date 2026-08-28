@@ -73,7 +73,6 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [repeating, setRepeating] = useState(false)
-  const [duplicating, setDuplicating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -185,55 +184,6 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
         })),
       )
     }
-    navigate(`/session/${newSession.id}`)
-  }
-
-  async function duplicateSession() {
-    if (!session || duplicating) return
-    setDuplicating(true)
-    const motivation = await getDailyMotivation()
-    const { data: newSession, error } = await supabase
-      .from('workout_sessions')
-      .insert({
-        name: session.name,
-        motivation_gif_url: motivation?.gifUrl ?? null,
-        motivation_quote: motivation?.quote ?? null,
-      })
-      .select()
-      .single()
-    if (error || !newSession) {
-      setDuplicating(false)
-      return
-    }
-    const newExercises = await Promise.all(
-      exercises.map(async (e, i) => {
-        const { data: newEx } = await supabase
-          .from('exercises')
-          .insert({
-            session_id: newSession.id,
-            exercise_db_id: e.exercise_db_id,
-            name: e.name,
-            position: i,
-          })
-          .select()
-          .single()
-        return { newExId: newEx?.id, sets: e.sets }
-      }),
-    )
-    await Promise.all(
-      newExercises.map(({ newExId, sets }) =>
-        newExId && sets.length > 0
-          ? supabase.from('sets').insert(
-              sets.map((s, i) => ({
-                exercise_id: newExId,
-                set_number: i + 1,
-                weight: s.weight,
-                reps: s.reps,
-              })),
-            )
-          : Promise.resolve(),
-      ),
-    )
     navigate(`/session/${newSession.id}`)
   }
 
@@ -363,18 +313,13 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          <Button variant="primary" className="w-full" onClick={repeatWorkout} disabled={repeating}>
+        <div className="flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(true)}>
+            Delete
+          </Button>
+          <Button variant="primary" className="flex-1" onClick={repeatWorkout} disabled={repeating}>
             {repeating ? 'Creating...' : 'Repeat Workout'}
           </Button>
-          <div className="flex gap-3">
-            <Button variant="secondary" className="flex-1" onClick={duplicateSession} disabled={duplicating}>
-              {duplicating ? 'Duplicating...' : 'Duplicate'}
-            </Button>
-            <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(true)}>
-              Delete
-            </Button>
-          </div>
         </div>
       )}
 
