@@ -19,6 +19,9 @@ type ExerciseBlockProps = {
   title: string
   sets: SetRowData[]
   definition?: ExerciseDefinitionInfo | null
+  // Whether this is the exercise a nameless voice command ("eighty for
+  // eight", "another set") would currently apply to.
+  isCurrent?: boolean
   onAddSet?: () => void
   onUpdateSet?: (index: number, field: 'weight' | 'reps', value: number) => void
   onDeleteSet?: (index: number) => void
@@ -30,6 +33,7 @@ export function ExerciseBlock({
   title,
   sets,
   definition,
+  isCurrent,
   onAddSet,
   onUpdateSet,
   onDeleteSet,
@@ -71,6 +75,14 @@ export function ExerciseBlock({
           >
             {title}
           </button>
+        )}
+        {isCurrent && !renaming && (
+          <span
+            className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-ink"
+            style={{ backgroundColor: 'var(--color-sky)' }}
+          >
+            Listening
+          </span>
         )}
         <IconButton
           icon={<IconMore className="h-4 w-4" />}

@@ -69,6 +69,7 @@ export function ActiveSession() {
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null)
   const [voiceState, setVoiceState] = useState<VoicePanelState>('idle')
   const [voiceMessage, setVoiceMessage] = useState<string | undefined>(undefined)
+  const [voiceInterim, setVoiceInterim] = useState('')
   const undoStackRef = useRef<Array<() => Promise<void> | void>>([])
 
   useEffect(() => {
@@ -196,11 +197,13 @@ export function ActiveSession() {
   }
 
   async function addExercise(def: ExerciseDefinition) {
-    await insertExercise(def.name, def.id)
+    const created = await insertExercise(def.name, def.id)
+    if (created) setCurrentExerciseId(created.id)
     setQuery('')
   }
 
   async function addSet(exerciseIndex: number) {
+    setCurrentExerciseId(exercises[exerciseIndex].id)
     await insertSetAndAttach(exercises[exerciseIndex].id, 0, 0)
   }
 
@@ -226,16 +229,25 @@ export function ActiveSession() {
     await deleteExerciseById(exercises[exerciseIndex].id)
   }
 
-  async function resolveExercise(name: string): Promise<{ exercise: ExerciseData; created: boolean } | null> {
+  // `created` = a new session-scoped `exercises` row was inserted (true the
+  // first time this exercise is referenced in this session, regardless of
+  // whether it matched a known definition — that's normal, not a miss).
+  // `matchedDefinition` = whether a definition was actually found, distinct
+  // from `created` — only false+created together means "had to guess a name
+  // from raw speech because nothing matched," which is the case worth
+  // calling out to the user.
+  async function resolveExercise(
+    name: string,
+  ): Promise<{ exercise: ExerciseData; created: boolean; matchedDefinition: boolean } | null> {
     const existing = matchExerciseName(name, exercises, 0.6)
-    if (existing) return { exercise: existing, created: false }
+    if (existing) return { exercise: existing, created: false, matchedDefinition: true }
     const def = matchExerciseName(name, definitions, 0.55)
     const created = await insertExercise(
       def ? def.name : name.replace(/\b\w/g, (c) => c.toUpperCase()),
       def ? def.id : null,
     )
     if (!created) return null
-    return { exercise: created, created: true }
+    return { exercise: created, created: true, matchedDefinition: def !== null }
   }
 
   async function runVoiceCommand(action: VoiceAction): Promise<{ ok: boolean; message?: string }> {
@@ -303,11 +315,13 @@ export function ActiveSession() {
       case 'logSet': {
         let exercise: ExerciseData | null
         let created = false
+        let matchedDefinition = true
         if (action.name) {
           const resolved = await resolveExercise(action.name)
           if (!resolved) return { ok: false, message: 'Could not add exercise' }
           exercise = resolved.exercise
           created = resolved.created
+          matchedDefinition = resolved.matchedDefinition
           setCurrentExerciseId(exercise.id)
         } else {
           exercise = exercises.find((e) => e.id === currentExerciseId) ?? null
@@ -334,7 +348,9 @@ export function ActiveSession() {
         } else if (newSet?.id) {
           undoStackRef.current.push(async () => deleteSetById(finalExercise.id, newSet.id!))
         }
-        return { ok: true, message: `${finalExercise.name}: ${weightValue}×${repsValue}` }
+        const namePart =
+          created && !matchedDefinition ? `Created "${finalExercise.name}" (no match found)` : finalExercise.name
+        return { ok: true, message: `${namePart}: ${weightValue}×${repsValue}` }
       }
 
       case 'selectExercise': {
@@ -347,7 +363,13 @@ export function ActiveSession() {
             setCurrentExerciseId(null)
           })
         }
-        return { ok: true, message: resolved.exercise.name }
+        return {
+          ok: true,
+          message:
+            resolved.created && !resolved.matchedDefinition
+              ? `Created new exercise "${resolved.exercise.name}" (no match found)`
+              : resolved.exercise.name,
+        }
       }
 
       default:
@@ -356,19 +378,25 @@ export function ActiveSession() {
   }
 
   const { start: startListening, stop: stopListening, supported: voiceSupported } = useSpeechRecognition({
+    onInterim: setVoiceInterim,
     onResult: async (transcript) => {
+      setVoiceInterim('')
       setVoiceState('processing')
+      const heard = transcript ? `"${transcript}"` : 'nothing'
       const action = parseVoiceCommand(transcript)
       if (!action) {
         setVoiceState('error')
-        setVoiceMessage(transcript ? `Heard "${transcript}" — couldn't find weight & reps` : "Didn't catch that")
+        setVoiceMessage(
+          transcript ? `Heard ${heard} — couldn't find weight & reps` : "Didn't catch that",
+        )
         return
       }
       const result = await runVoiceCommand(action)
       setVoiceState(result.ok ? 'success' : 'error')
-      setVoiceMessage(result.message)
+      setVoiceMessage(`Heard ${heard} → ${result.message}`)
     },
     onError: (message) => {
+      setVoiceInterim('')
       setVoiceState('error')
       setVoiceMessage(message)
     },
@@ -384,6 +412,7 @@ export function ActiveSession() {
     if (voiceState === 'idle' || voiceState === 'error' || voiceState === 'success') {
       setVoiceState('listening')
       setVoiceMessage(undefined)
+      setVoiceInterim('')
       startListening()
     } else if (voiceState === 'listening') {
       stopListening()
@@ -504,7 +533,7 @@ export function ActiveSession() {
 
       {!session.end_time &&
         (voiceSupported ? (
-          <VoicePanel state={voiceState} onMicClick={handleMicClick} message={voiceMessage} />
+          <VoicePanel state={voiceState} onMicClick={handleMicClick} message={voiceMessage} interim={voiceInterim} />
         ) : (
           <p className="text-center text-xs text-graphite">
             Voice input isn't supported in this browser.
@@ -518,6 +547,7 @@ export function ActiveSession() {
             title={ex.name}
             sets={ex.sets}
             definition={definitions.find((d) => d.id === ex.exercise_db_id) ?? null}
+            isCurrent={ex.id === currentExerciseId}
             onAddSet={() => addSet(i)}
             onUpdateSet={(setIndex, field, value) => updateSet(i, setIndex, field, value)}
             onDeleteSet={(setIndex) => deleteSet(i, setIndex)}

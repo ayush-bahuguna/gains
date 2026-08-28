@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 
 // Minimal ambient shape for the Web Speech API — not in lib.dom.d.ts.
 type SpeechRecognitionResultLike = { transcript: string }
-type SpeechRecognitionEventLike = { results: { [index: number]: { [index: number]: SpeechRecognitionResultLike } } }
+type SpeechRecognitionResultItemLike = { isFinal: boolean; [index: number]: SpeechRecognitionResultLike }
+type SpeechRecognitionEventLike = { results: { [index: number]: SpeechRecognitionResultItemLike } }
 type SpeechRecognitionErrorEventLike = { error: string }
 type SpeechRecognitionLike = {
   lang: string
@@ -26,6 +27,7 @@ function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
 
 type UseSpeechRecognitionOptions = {
   onResult: (transcript: string) => void
+  onInterim?: (transcript: string) => void
   onError?: (message: string) => void
   onEnd?: () => void
 }
@@ -45,7 +47,7 @@ function detachHandlers(recognition: SpeechRecognitionLike) {
 // Wraps the browser's SpeechRecognition for a single spoken utterance at a
 // time (continuous: false) — the browser auto-stops on silence and fires
 // onresult/onend, which is a natural fit for one voice command per tap.
-export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechRecognitionOptions) {
+export function useSpeechRecognition({ onResult, onInterim, onError, onEnd }: UseSpeechRecognitionOptions) {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
   // Some engines end a session with neither a result nor an error — e.g. a
   // denied/blocked mic permission can silently no-op straight to onend.
@@ -87,12 +89,17 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
     const recognition = new Ctor()
     recognition.lang = 'en-US'
     recognition.continuous = false
-    recognition.interimResults = false
+    recognition.interimResults = true
     recognition.maxAlternatives = 1
     recognition.onresult = (event) => {
+      const result = event.results[0]
+      const transcript = result?.[0]?.transcript ?? ''
+      if (!result?.isFinal) {
+        onInterim?.(transcript)
+        return
+      }
       handledRef.current = true
       clearWatchdog()
-      const transcript = event.results[0]?.[0]?.transcript ?? ''
       onResult(transcript)
     }
     recognition.onerror = (event) => {
@@ -127,7 +134,7 @@ export function useSpeechRecognition({ onResult, onError, onEnd }: UseSpeechReco
     } catch {
       onError?.('Could not start voice input — try again.')
     }
-  }, [onResult, onError, onEnd])
+  }, [onResult, onInterim, onError, onEnd])
 
   const stop = useCallback(() => {
     manualStopRef.current = true

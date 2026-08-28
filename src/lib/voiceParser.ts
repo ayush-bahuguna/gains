@@ -242,6 +242,37 @@ function similarity(a: string, b: string): number {
   return 1 - levenshtein(a, b) / maxLen
 }
 
+const MATCH_STOPWORDS = new Set(['the', 'a', 'an', 'do', 'some', 'my'])
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 0 && !MATCH_STOPWORDS.has(t))
+}
+
+// Word-level overlap score, complementing the whole-string Levenshtein
+// similarity above — that one penalizes extra words ("do the bench press")
+// and word-order/plural differences ("cable crossovers" vs. alias "cable
+// crossover") heavily enough to legitimately miss real matches. This scores
+// how many query words appear (exactly or near-exactly) in the candidate,
+// as a Jaccard ratio over the combined token set — NOT normalized against
+// just the smaller side, which would let an exact match ("Bench Press")
+// and a strict superset ("Incline Barbell Bench Press") tie at a perfect
+// score just because every query word happens to appear in both; Jaccard
+// correctly scores the exact match higher since the superset has extra
+// unmatched words dragging its union count up.
+function tokenOverlapScore(query: string, candidate: string): number {
+  const qTokens = tokenize(query)
+  const cTokens = tokenize(candidate)
+  if (qTokens.length === 0 || cTokens.length === 0) return 0
+  let matched = 0
+  for (const qt of qTokens) {
+    if (cTokens.some((ct) => qt === ct || similarity(qt, ct) >= 0.8)) matched++
+  }
+  return matched / (qTokens.length + cTokens.length - matched)
+}
+
 // Fuzzy exercise-name matcher against name + aliases — handles "bench"
 // matching "Bench Press", minor mis-transcriptions, etc.
 export function matchExerciseName<T extends MatchCandidate>(query: string, candidates: T[], threshold = 0.55): T | null {
@@ -252,7 +283,7 @@ export function matchExerciseName<T extends MatchCandidate>(query: string, candi
   for (const c of candidates) {
     for (const n of [c.name, ...(c.aliases ?? [])]) {
       const nl = n.toLowerCase()
-      let score = similarity(q, nl)
+      let score = Math.max(similarity(q, nl), tokenOverlapScore(q, nl))
       if (nl.includes(q) || q.includes(nl)) score = Math.max(score, 0.85)
       if (nl.startsWith(q) || q.startsWith(nl)) score = Math.max(score, 0.9)
       if (score > bestScore) {

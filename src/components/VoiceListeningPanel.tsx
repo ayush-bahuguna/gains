@@ -99,6 +99,7 @@ type VoicePanelProps = {
   state: VoicePanelState
   onMicClick?: () => void
   message?: string
+  interim?: string
 }
 
 const panelCopy: Record<Exclude<VoicePanelState, 'listening'>, { label: string; helper: string }> = {
@@ -111,12 +112,16 @@ const panelCopy: Record<Exclude<VoicePanelState, 'listening'>, { label: string; 
 // A single persistent panel frame — only its contents swap between idle,
 // listening, processing, error, and success, so the outer outline never
 // disappears.
-export function VoicePanel({ state, onMicClick, message }: VoicePanelProps) {
+export function VoicePanel({ state, onMicClick, message, interim }: VoicePanelProps) {
   if (state === 'listening') {
     return (
       <Card className="flex flex-col items-center gap-2">
         <p className="text-sm font-medium text-ink">Listening...</p>
         <Waveform />
+        {/* Live partial transcript — proves the mic is actually picking up
+            speech in real time, since the decorative waveform above isn't
+            audio-driven. */}
+        <p className="min-h-4 text-center text-sm italic text-ink">{interim ? `"${interim}"` : ' '}</p>
         <ListeningMicButton onClick={onMicClick} />
         <p className="text-xs text-graphite">Tap to stop</p>
       </Card>
