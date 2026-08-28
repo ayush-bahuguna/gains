@@ -142,8 +142,12 @@ const SLOT = `(?:same|${UP_WORDS}\\s+${NUM}|${DOWN_WORDS}\\s+${NUM}|${NUM})`
 // need ("65 kg", "12 reps", "12 sets" said loosely to mean reps) — stripped
 // before the weight/reps patterns are tried, never before the fixed-phrase
 // commands (delete last SET, another SET) since those need those exact
-// words present.
-const FILLER_WORDS = /\b(kgs?|kilograms?|kilos?|lbs?|pounds?|reps?|repetitions?|sets?)\b/g
+// words present. wraps/raps: speech recognition commonly mishears "reps"
+// as one of these (e.g. "15 reps" -> "15 wraps") — a single trailing
+// unstrippable word like that fails the whole log-set grammar (see the
+// "four"/"for" homophone handling in disambiguateForFour above for the
+// same class of problem).
+const FILLER_WORDS = /\b(kgs?|kilograms?|kilos?|lbs?|pounds?|reps?|repetitions?|wraps?|raps?|sets?)\b/g
 
 function stripFillerWords(text: string): string {
   return text.replace(FILLER_WORDS, ' ').replace(/\s+/g, ' ').trim()
