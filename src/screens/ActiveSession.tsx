@@ -11,6 +11,7 @@ import { SearchInput } from '../components/SearchInput'
 import type { SetRowData } from '../components/SetTable'
 import { TextInput } from '../components/TextInput'
 import { VoicePanel, type VoicePanelState } from '../components/VoiceListeningPanel'
+import { getDailyMotivation } from '../lib/dailyMotivation'
 import { useClickOutside } from '../lib/useClickOutside'
 import { useSpeechRecognition } from '../lib/useSpeechRecognition'
 import { supabase } from '../lib/supabase'
@@ -462,9 +463,21 @@ export function ActiveSession() {
   async function finishSession() {
     if (!session || finishing) return
     setFinishing(true)
+    // Re-fetch rather than trust whatever was attached at start — the user
+    // may have long-press-rerolled the Journal Home gif at any point during
+    // the session, and the summary should reflect today's current pick, not
+    // a stale snapshot from creation time. getDailyMotivation() reads from
+    // its own cache so this is just a cache hit, not a fresh network call,
+    // unless the session somehow spans past midnight.
+    const motivation = await getDailyMotivation()
     await supabase
       .from('workout_sessions')
-      .update({ end_time: new Date().toISOString(), name: session.name, notes: notesDraft })
+      .update({
+        end_time: new Date().toISOString(),
+        name: session.name,
+        notes: notesDraft,
+        ...(motivation ? { motivation_gif_url: motivation.gifUrl, motivation_quote: motivation.quote } : {}),
+      })
       .eq('id', session.id)
     navigate(`/session/${session.id}/summary`)
   }
