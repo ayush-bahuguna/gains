@@ -5,6 +5,12 @@ import { refreshDailyMotivation, type DailyMotivation } from '../lib/dailyMotiva
 const HOLD_MS = 5000
 const CANCEL_MS = 300
 const RECEDE_MS = 700
+// Start fetching the next gif partway through the hold rather than at
+// pointerdown, so a quick/accidental tap never fires the Giphy API — but
+// early enough that the network round-trip has finished by the time the
+// spill reaches full coverage, so the reveal feels immediate instead of
+// pausing on a frozen black screen.
+const PREFETCH_DELAY_MS = 1500
 
 type Phase = 'idle' | 'placed' | 'growing' | 'cancelling' | 'reloading' | 'receding'
 
@@ -37,10 +43,24 @@ export function MotivationGif({
   const [phase, setPhase] = useState<Phase>('idle')
   const [blob, setBlob] = useState<SpillBlob | null>(null)
   const phaseRef = useRef<Phase>('idle')
+  const reloadPromiseRef = useRef<Promise<DailyMotivation | null> | null>(null)
+  const prefetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function setPhaseBoth(p: Phase) {
     phaseRef.current = p
     setPhase(p)
+  }
+
+  async function prefetchReload() {
+    const next = await refreshDailyMotivation()
+    if (!next) return null
+    await new Promise<void>((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve()
+      img.onerror = () => resolve()
+      img.src = next.gifUrl
+    })
+    return next
   }
 
   function startPress(e: PointerEvent<HTMLDivElement>) {
@@ -70,25 +90,28 @@ export function MotivationGif({
     })
     setPhaseBoth('placed')
     requestAnimationFrame(() => requestAnimationFrame(() => setPhaseBoth('growing')))
+
+    reloadPromiseRef.current = null
+    prefetchTimeoutRef.current = setTimeout(() => {
+      reloadPromiseRef.current = prefetchReload()
+    }, PREFETCH_DELAY_MS)
   }
 
   function cancelPress() {
     if (phaseRef.current !== 'growing' && phaseRef.current !== 'placed') return
+    if (prefetchTimeoutRef.current) {
+      clearTimeout(prefetchTimeoutRef.current)
+      prefetchTimeoutRef.current = null
+    }
     setPhaseBoth('cancelling')
   }
 
   async function commitReload() {
     setPhaseBoth('reloading')
-    const next = await refreshDailyMotivation()
-    if (next) {
-      await new Promise<void>((resolve) => {
-        const img = new Image()
-        img.onload = () => resolve()
-        img.onerror = () => resolve()
-        img.src = next.gifUrl
-      })
-      onChange(next)
-    }
+    // Almost always already resolved by now, since it started 3.5s ago —
+    // this await is just picking up a finished (or near-finished) result.
+    const next = await (reloadPromiseRef.current ?? prefetchReload())
+    if (next) onChange(next)
     setPhaseBoth('receding')
   }
 
