@@ -11,6 +11,7 @@ import { SearchInput } from '../components/SearchInput'
 import type { SetRowData } from '../components/SetTable'
 import { TextInput } from '../components/TextInput'
 import { VoicePanel, type VoicePanelState } from '../components/VoiceListeningPanel'
+import { useClickOutside } from '../lib/useClickOutside'
 import { useSpeechRecognition } from '../lib/useSpeechRecognition'
 import { supabase } from '../lib/supabase'
 import { matchExerciseName, parseVoiceCommand, type VoiceAction } from '../lib/voiceParser'
@@ -138,6 +139,9 @@ export function ActiveSession() {
       .filter((d) => d.name.toLowerCase().includes(q) || d.aliases.some((a) => a.toLowerCase().includes(q)))
       .slice(0, 6)
   }, [query, definitions])
+
+  const searchRef = useRef<HTMLDivElement>(null)
+  useClickOutside(searchRef, () => setQuery(''), results.length > 0)
 
   async function insertExercise(name: string, exerciseDbId: string | null): Promise<ExerciseData | null> {
     if (!id) return null
@@ -507,7 +511,7 @@ export function ActiveSession() {
         </p>
       </div>
 
-      <div className="relative">
+      <div className="relative" ref={searchRef}>
         <SearchInput
           placeholder="Search to add an exercise"
           value={query}

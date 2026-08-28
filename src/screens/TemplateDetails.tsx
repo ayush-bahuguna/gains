@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import type { ExerciseDefinitionInfo } from '../components/ExerciseBlock'
@@ -12,6 +12,7 @@ import { TemplateExerciseRow } from '../components/TemplateExerciseRow'
 import { TextInput } from '../components/TextInput'
 import { getDailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
+import { useClickOutside } from '../lib/useClickOutside'
 
 type TemplateData = { id: string; name: string }
 type TemplateExercise = { id: string; exercise_db_id: string; name: string } & ExerciseDefinitionInfo
@@ -99,6 +100,9 @@ export function TemplateDetails() {
       .filter((d) => d.name.toLowerCase().includes(q) || d.aliases.some((a) => a.toLowerCase().includes(q)))
       .slice(0, 6)
   }, [query, definitions])
+
+  const searchRef = useRef<HTMLDivElement>(null)
+  useClickOutside(searchRef, () => setQuery(''), results.length > 0)
 
   async function addExercise(def: ExerciseDefinition) {
     if (!id) return
@@ -246,7 +250,7 @@ export function TemplateDetails() {
       <div className="space-y-6 px-6 pb-6 pt-4">
         <div>
           <p className="mb-2 text-lg font-bold text-ink">Exercises</p>
-          <div className="relative">
+          <div className="relative" ref={searchRef}>
             <SearchInput
               placeholder="Search to add an exercise"
               value={query}
