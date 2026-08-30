@@ -15,18 +15,23 @@ import { supabase } from '../lib/supabase'
 // display the exercise's own specific primary_muscle text; this grouping
 // only drives the pill filter.
 const muscleGroups = [
-  { label: 'Chest', muscles: ['chest'] },
-  { label: 'Back', muscles: ['back', 'lower back', 'traps'] },
-  { label: 'Shoulders', muscles: ['shoulders', 'rear delts'] },
-  { label: 'Arms', muscles: ['biceps', 'triceps', 'forearms'] },
-  { label: 'Legs', muscles: ['quads', 'hamstrings', 'legs', 'adductors'] },
-  { label: 'Glutes', muscles: ['glutes', 'abductors'] },
-  { label: 'Calves', muscles: ['calves'] },
-  { label: 'Core', muscles: ['abs', 'core'] },
-  { label: 'Full Body', muscles: ['full body'] },
+  { label: 'Chest', type: 'muscle' as const, muscles: ['chest'] },
+  { label: 'Back', type: 'muscle' as const, muscles: ['back', 'lower back', 'traps'] },
+  { label: 'Shoulders', type: 'muscle' as const, muscles: ['shoulders', 'rear delts'] },
+  { label: 'Arms', type: 'muscle' as const, muscles: ['biceps', 'triceps', 'forearms'] },
+  { label: 'Legs', type: 'muscle' as const, muscles: ['quads', 'hamstrings', 'legs', 'adductors'] },
+  { label: 'Glutes', type: 'muscle' as const, muscles: ['glutes', 'abductors'] },
+  { label: 'Calves', type: 'muscle' as const, muscles: ['calves'] },
+  { label: 'Core', type: 'muscle' as const, muscles: ['abs', 'core'] },
+  { label: 'Full Body', type: 'muscle' as const, muscles: ['full body'] },
 ]
 
-const muscleFilters = ['All', ...muscleGroups.map((g) => g.label)]
+// Equipment-based filter pills, alongside the muscle-group ones above —
+// matches against exercise_definitions.equipment instead of primary_muscle.
+const equipmentGroups = [{ label: 'Band', type: 'equipment' as const, equipment: ['resistance band'] }]
+
+const filterGroups = [...muscleGroups, ...equipmentGroups]
+const muscleFilters = ['All', ...filterGroups.map((g) => g.label)]
 
 type ExerciseDefRow = {
   id: string
@@ -70,13 +75,16 @@ export function ExerciseLibrary() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const group = muscleGroups.find((g) => g.label === selectedMuscle)
+    const group = filterGroups.find((g) => g.label === selectedMuscle)
     return exercises.filter((e) => {
-      const matchesMuscle =
-        selectedMuscle === 'All' || (group?.muscles.includes(e.primary_muscle?.toLowerCase() ?? '') ?? false)
+      const matchesFilter =
+        selectedMuscle === 'All' ||
+        (group?.type === 'muscle'
+          ? group.muscles.includes(e.primary_muscle?.toLowerCase() ?? '')
+          : (group?.equipment.includes(e.equipment?.toLowerCase() ?? '') ?? false))
       const matchesSearch =
         !q || e.name.toLowerCase().includes(q) || e.aliases.some((a) => a.toLowerCase().includes(q))
-      return matchesMuscle && matchesSearch
+      return matchesFilter && matchesSearch
     })
   }, [exercises, query, selectedMuscle])
 

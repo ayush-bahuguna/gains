@@ -177,19 +177,15 @@ export function IconDumbbell(props: IconProps) {
   )
 }
 
-// Selected state reads as "more weight loaded" — three plates per side
-// (all full-size) instead of the outline icon's one, no tilt/bend.
+// Selected state mirrors the outline icon's shape (one end cap + one
+// plate per side) but filled solid instead of stroked.
 export function IconDumbbellFilled(props: IconProps) {
   return (
     <svg {...filledBase(props)}>
-      <rect x="0" y="10" width="1.6" height="4" rx="0.8" />
-      <rect x="1.9" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="3.8" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="5.7" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="16.7" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="18.6" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="20.5" y="7" width="1.6" height="10" rx="0.8" />
-      <rect x="22.4" y="10" width="1.6" height="4" rx="0.8" />
+      <rect x="0" y="9.125" width="1.6" height="5.75" rx="0.8" />
+      <rect x="1.9" y="7" width="5.4" height="10" rx="0.8" />
+      <rect x="16.7" y="7" width="5.4" height="10" rx="0.8" />
+      <rect x="22.4" y="9.125" width="1.6" height="5.75" rx="0.8" />
       <rect x="7.5" y="11" width="9" height="2" rx="1" />
     </svg>
   )
