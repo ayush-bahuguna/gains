@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { splitDescription } from '../lib/exerciseInfo'
 import { Card } from './Card'
 import { IconBox } from './IconBox'
 import { IconButton } from './IconButton'
@@ -21,6 +22,12 @@ export function TemplateCard({
   onMenuClick,
   onClick,
 }: TemplateCardProps) {
+  // Same ' Targets:' convention as exercise_definitions.description — if the
+  // template description uses it, show only the target blurb on the compact
+  // card instead of the full text; the detail page still shows everything.
+  const parsed = splitDescription(description)
+  const preview = parsed ? parsed.targets || parsed.howTo : ''
+
   return (
     <Card onClick={onClick} className={onClick ? 'cursor-pointer text-left' : ''}>
       <div className="flex items-center justify-between gap-2">
@@ -39,7 +46,7 @@ export function TemplateCard({
           />
         )}
       </div>
-      <p className="mt-2 text-xs text-graphite">{description || 'No description yet'}</p>
+      <p className="mt-2 text-xs text-graphite">{preview || 'No description yet'}</p>
       <p className="mt-1 text-xs text-graphite">{exerciseCount} exercises</p>
     </Card>
   )

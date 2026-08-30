@@ -1,13 +1,32 @@
 import { NavLink } from 'react-router-dom'
 import { useMeasure } from '../lib/useMeasure'
-import { IconCalendar, IconDumbbell, IconNotebook, IconUser } from './icons'
+import {
+  IconCalendar,
+  IconCalendarFilled,
+  IconDumbbell,
+  IconDumbbellFilled,
+  IconNotebook,
+  IconNotebookFilled,
+  IconUser,
+  IconUserFilled,
+} from './icons'
 import { Sketchy } from './Sketchy'
 
 const tabs = [
-  { to: '/journal', label: 'Log', icon: IconNotebook },
-  { to: '/templates', label: 'Workouts', icon: IconDumbbell },
-  { to: '/history', label: 'History', icon: IconCalendar },
-  { to: '/me', label: 'Me', icon: IconUser },
+  { to: '/journal', label: 'Log', icon: IconNotebook, filledIcon: IconNotebookFilled },
+  {
+    to: '/templates',
+    label: 'Workouts',
+    icon: IconDumbbell,
+    filledIcon: IconDumbbellFilled,
+  },
+  {
+    to: '/history',
+    label: 'History',
+    icon: IconCalendar,
+    filledIcon: IconCalendarFilled,
+  },
+  { to: '/me', label: 'Me', icon: IconUser, filledIcon: IconUserFilled },
 ]
 
 function TopDivider() {
@@ -36,7 +55,7 @@ export function BottomNav() {
     >
       <TopDivider />
       <nav className="flex pb-1">
-        {tabs.map(({ to, label, icon: Icon }) => (
+        {tabs.map(({ to, label, icon: Icon, filledIcon: FilledIcon }) => (
           <NavLink
             key={to}
             to={to}
@@ -46,8 +65,15 @@ export function BottomNav() {
               }`
             }
           >
-            <Icon className="h-5 w-5" />
-            <span>{label}</span>
+            {({ isActive }) => {
+              const TabIcon = isActive ? FilledIcon : Icon
+              return (
+                <>
+                  <TabIcon className="h-5 w-5" />
+                  <span>{label}</span>
+                </>
+              )
+            }}
           </NavLink>
         ))}
       </nav>

@@ -51,7 +51,11 @@ export function TemplatesList() {
   async function createTemplate() {
     if (creating) return
     setCreating(true)
-    const { data, error } = await supabase.from('templates').insert({ name: 'New Workout' }).select().single()
+    const { data, error } = await supabase
+      .from('templates')
+      .insert({ name: 'New Workout' })
+      .select()
+      .single()
     setCreating(false)
     if (error || !data) return
     navigate(`/templates/${data.id}`)
@@ -63,7 +67,8 @@ export function TemplatesList() {
         <div className="flex items-center justify-between px-6 pb-4 pt-6">
           <h1 className="text-2xl font-bold text-ink">Workouts</h1>
           <IconButton
-            icon={<IconPlus className="h-4 w-4" />}
+            icon={<IconPlus className="h-3.5 w-3.5" />}
+            size="sm"
             onClick={createTemplate}
             disabled={creating}
             aria-label="New template"

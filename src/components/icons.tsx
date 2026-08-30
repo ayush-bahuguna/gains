@@ -14,6 +14,17 @@ function base(props: IconProps): IconProps {
   }
 }
 
+// Solid counterpart to base() for "-Filled" icon variants (selected/active
+// state) — same viewBox, but a plain currentColor fill instead of a stroke.
+function filledBase(props: IconProps): IconProps {
+  return {
+    viewBox: '0 0 24 24',
+    fill: 'currentColor',
+    stroke: 'none',
+    ...props,
+  }
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <svg {...base(props)}>
@@ -166,6 +177,24 @@ export function IconDumbbell(props: IconProps) {
   )
 }
 
+// Selected state reads as "more weight loaded" — three plates per side
+// (all full-size) instead of the outline icon's one, no tilt/bend.
+export function IconDumbbellFilled(props: IconProps) {
+  return (
+    <svg {...filledBase(props)}>
+      <rect x="0" y="10" width="1.6" height="4" rx="0.8" />
+      <rect x="1.9" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="3.8" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="5.7" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="16.7" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="18.6" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="20.5" y="7" width="1.6" height="10" rx="0.8" />
+      <rect x="22.4" y="10" width="1.6" height="4" rx="0.8" />
+      <rect x="7.5" y="11" width="9" height="2" rx="1" />
+    </svg>
+  )
+}
+
 export function IconNotebook(props: IconProps) {
   return (
     <svg {...base(props)}>
@@ -177,9 +206,74 @@ export function IconNotebook(props: IconProps) {
   )
 }
 
+// Spine + cover drawn as two separate filled blocks (with a gap between)
+// rather than one solid rect with a stroked spine line — keeps the
+// notebook silhouette readable without needing a second color.
+export function IconNotebookFilled(props: IconProps) {
+  return (
+    <svg {...filledBase(props)}>
+      <rect x="5" y="3" width="2.3" height="18" rx="1" />
+      <rect x="8.6" y="3" width="10.4" height="18" rx="1.5" />
+      <path
+        d="M12 8h4"
+        stroke="var(--color-paper)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M12 12h4"
+        stroke="var(--color-paper)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  )
+}
+
 export function IconCalendar(props: IconProps) {
   return (
     <svg {...base(props)}>
+      <rect x="4" y="5" width="16" height="15" rx="1.5" />
+      <path d="M4 9.5h16" />
+      <path d="M8 3v3.5" />
+      <path d="M16 3v3.5" />
+    </svg>
+  )
+}
+
+// Top (rings + border + header divider) stays exactly like the outline
+// icon — only the bottom panel, below the divider, gets solid-filled. The
+// fill is drawn first, flush with the border on left/right/bottom (same
+// x/width/rx as the outer rect) with a small gap below the divider line;
+// the border/divider/rings are drawn after so they stay crisp on top.
+export function IconCalendarFilled(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <rect
+        x="4"
+        y="10"
+        width="16"
+        height="10"
+        rx="1.5"
+        fill="currentColor"
+        stroke="none"
+      />
+      <path
+        d="M7 12.75h7"
+        stroke="var(--color-paper)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M7 16.25h4"
+        stroke="var(--color-paper)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
       <rect x="4" y="5" width="16" height="15" rx="1.5" />
       <path d="M4 9.5h16" />
       <path d="M8 3v3.5" />
@@ -214,6 +308,15 @@ export function IconUser(props: IconProps) {
     <svg {...base(props)}>
       <circle cx="12" cy="8" r="3.5" />
       <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5" />
+    </svg>
+  )
+}
+
+export function IconUserFilled(props: IconProps) {
+  return (
+    <svg {...filledBase(props)}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.4-3.6 4.4-5.5 7.5-5.5s6.1 1.9 7.5 5.5v1.5h-15z" />
     </svg>
   )
 }
