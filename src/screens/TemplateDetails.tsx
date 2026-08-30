@@ -191,9 +191,9 @@ export function TemplateDetails() {
   if (notFound || !template) {
     return (
       <div className="flex flex-col items-center gap-3 p-6 text-center">
-        <p className="text-sm text-graphite">Template not found.</p>
+        <p className="text-sm text-graphite">Workout not found.</p>
         <Button variant="secondary" onClick={() => navigate('/templates')}>
-          Back to Templates
+          Back to Workouts
         </Button>
       </div>
     )
@@ -237,7 +237,7 @@ export function TemplateDetails() {
               icon={<IconTrash className="h-4 w-4" />}
               tone="danger"
               onClick={() => setConfirmDelete(true)}
-              aria-label="Delete template"
+              aria-label="Delete workout"
             />
           </div>
         </div>
@@ -304,7 +304,7 @@ export function TemplateDetails() {
           )}
         </div>
 
-        <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete template?">
+        <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete workout?">
           <p>This permanently removes "{template.name}".</p>
           <div className="mt-5 flex justify-end gap-3">
             <Button variant="secondary" onClick={() => setConfirmDelete(false)}>

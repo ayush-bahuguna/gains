@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireAuth } from './components/RequireAuth'
 import { ActiveSession } from './screens/ActiveSession'
+import { ExerciseDetail } from './screens/ExerciseDetail'
+import { ExerciseLibrary } from './screens/ExerciseLibrary'
 import { HistoryList } from './screens/HistoryList'
 import { JournalHome } from './screens/JournalHome'
 import { Me } from './screens/Me'
@@ -22,6 +24,7 @@ import { NotesCheck } from './screens/dev/NotesCheck'
 import { AlertsCheck } from './screens/dev/AlertsCheck'
 import { EmptyStatesCheck } from './screens/dev/EmptyStatesCheck'
 import { TemplateCardCheck } from './screens/dev/TemplateCardCheck'
+import { ExerciseCardCheck } from './screens/dev/ExerciseCardCheck'
 import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
 import { CalendarCheck } from './screens/dev/CalendarCheck'
@@ -53,6 +56,22 @@ function App() {
           element={
             <RequireAuth>
               <TemplateDetails />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/exercises"
+          element={
+            <RequireAuth>
+              <ExerciseLibrary />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/exercises/:id"
+          element={
+            <RequireAuth>
+              <ExerciseDetail />
             </RequireAuth>
           }
         />
@@ -104,6 +123,7 @@ function App() {
       <Route path="/_dev/alerts" element={<AlertsCheck />} />
       <Route path="/_dev/empty" element={<EmptyStatesCheck />} />
       <Route path="/_dev/templatecard" element={<TemplateCardCheck />} />
+      <Route path="/_dev/exercisecard" element={<ExerciseCardCheck />} />
       <Route path="/_dev/misc" element={<MiscCheck />} />
       <Route path="/_dev/voice" element={<VoiceCheck />} />
       <Route path="/_dev/calendar" element={<CalendarCheck />} />

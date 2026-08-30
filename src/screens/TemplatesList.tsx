@@ -51,7 +51,7 @@ export function TemplatesList() {
   async function createTemplate() {
     if (creating) return
     setCreating(true)
-    const { data, error } = await supabase.from('templates').insert({ name: 'New Template' }).select().single()
+    const { data, error } = await supabase.from('templates').insert({ name: 'New Workout' }).select().single()
     setCreating(false)
     if (error || !data) return
     navigate(`/templates/${data.id}`)
@@ -61,7 +61,7 @@ export function TemplatesList() {
     <div>
       <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
         <div className="flex items-center justify-between px-6 pb-4 pt-6">
-          <h1 className="text-2xl font-bold text-ink">Templates</h1>
+          <h1 className="text-2xl font-bold text-ink">Workouts</h1>
           <IconButton
             icon={<IconPlus className="h-4 w-4" />}
             onClick={createTemplate}
@@ -78,9 +78,9 @@ export function TemplatesList() {
         ) : templates.length === 0 ? (
           <EmptyState
             icon={<IconDumbbell className="h-6 w-6" />}
-            title="No templates yet"
+            title="No workouts yet"
             subtitle="Create one to speed up logging"
-            actionLabel="New Template"
+            actionLabel="New Workout"
             onAction={createTemplate}
           />
         ) : (

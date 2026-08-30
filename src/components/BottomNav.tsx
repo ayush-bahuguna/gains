@@ -5,7 +5,7 @@ import { Sketchy } from './Sketchy'
 
 const tabs = [
   { to: '/journal', label: 'Log', icon: IconNotebook },
-  { to: '/templates', label: 'Templates', icon: IconDumbbell },
+  { to: '/templates', label: 'Workouts', icon: IconDumbbell },
   { to: '/history', label: 'History', icon: IconCalendar },
   { to: '/me', label: 'Me', icon: IconUser },
 ]

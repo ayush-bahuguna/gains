@@ -9,6 +9,7 @@ import { Chip } from '../../components/Chip'
 import { Dropdown } from '../../components/Dropdown'
 import { EmptyState } from '../../components/EmptyState'
 import { ExerciseBlock } from '../../components/ExerciseBlock'
+import { ExerciseCard } from '../../components/ExerciseCard'
 import { firstWeekdayOfMonth, toISODate } from '../../lib/date'
 import { IconButton } from '../../components/IconButton'
 import {
@@ -134,6 +135,7 @@ export function KitchenSink() {
           description="Back and pull-focused day."
           exerciseCount={5}
         />
+        <ExerciseCard name="Bench Press" imageUrl={null} primaryMuscle="chest" equipment="barbell" />
       </Section>
 
       <Section title="Exercise Block">

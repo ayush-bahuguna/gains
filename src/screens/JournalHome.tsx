@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
-import { IconDumbbell, IconNotebook } from '../components/icons'
+import { IconBox } from '../components/IconBox'
+import { IconDumbbell, IconNotebook, IconSearch } from '../components/icons'
 import { ListCard } from '../components/ListCard'
 import { MotivationGif } from '../components/MotivationGif'
 import { TemplateCard } from '../components/TemplateCard'
@@ -152,7 +153,7 @@ export function JournalHome() {
 
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-ink">Recent Templates</h2>
+          <h2 className="text-lg font-bold text-ink">Recent Workouts</h2>
           <button
             type="button"
             onClick={() => navigate('/templates')}
@@ -164,9 +165,9 @@ export function JournalHome() {
         {recentTemplates.length === 0 ? (
           <EmptyState
             icon={<IconDumbbell className="h-6 w-6" />}
-            title="No templates yet"
+            title="No workouts yet"
             subtitle="Create one to speed up logging"
-            actionLabel="View Templates"
+            actionLabel="View Workouts"
             onAction={() => navigate('/templates')}
           />
         ) : (
@@ -184,6 +185,19 @@ export function JournalHome() {
           </div>
         )}
       </section>
+
+      <Card onClick={() => navigate('/exercises')} className="cursor-pointer text-left">
+        <div className="flex items-start gap-3">
+          <IconBox icon={<IconSearch className="h-5 w-5" />} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-ink">Exercise Library</p>
+            <p className="mt-1 text-xs text-graphite">
+              Explore exercises, muscles, equipment and how to perform them.
+            </p>
+            <p className="mt-2 text-xs font-medium text-ink">Browse Exercises →</p>
+          </div>
+        </div>
+      </Card>
 
       <section>
         <div className="mb-2 flex items-center justify-between">
