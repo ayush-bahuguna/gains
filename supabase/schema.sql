@@ -155,6 +155,7 @@ create table if not exists templates (
 -- Added after the initial table creation — safe to re-run.
 alter table templates alter column user_id drop not null;
 alter table templates add column if not exists is_default boolean not null default false;
+alter table templates add column if not exists description text not null default '';
 
 alter table templates enable row level security;
 

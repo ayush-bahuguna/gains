@@ -7,7 +7,7 @@ import { IconMore } from './icons'
 type TemplateCardProps = {
   icon: ReactNode
   title: string
-  exercisePreview: string
+  description: string
   exerciseCount: number
   onMenuClick?: () => void
   onClick?: () => void
@@ -16,7 +16,7 @@ type TemplateCardProps = {
 export function TemplateCard({
   icon,
   title,
-  exercisePreview,
+  description,
   exerciseCount,
   onMenuClick,
   onClick,
@@ -39,7 +39,7 @@ export function TemplateCard({
           />
         )}
       </div>
-      <p className="mt-2 text-xs text-graphite">{exercisePreview}</p>
+      <p className="mt-2 text-xs text-graphite">{description || 'No description yet'}</p>
       <p className="mt-1 text-xs text-graphite">{exerciseCount} exercises</p>
     </Card>
   )

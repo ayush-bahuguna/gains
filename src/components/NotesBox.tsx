@@ -5,6 +5,7 @@ import { IconChevronDown } from './icons'
 import { Sketchy } from './Sketchy'
 
 type NotesBoxProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label?: string
   defaultExpanded?: boolean
   bordered?: boolean
   collapsible?: boolean
@@ -13,6 +14,7 @@ type NotesBoxProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 
 export function NotesBox({
   className = '',
+  label = 'Notes',
   defaultExpanded = false,
   bordered = true,
   collapsible = true,
@@ -53,13 +55,13 @@ export function NotesBox({
             onClick={() => setExpanded((v) => !v)}
             className="flex w-full items-center justify-between text-xs text-graphite"
           >
-            <span>Notes</span>
+            <span>{label}</span>
             <IconChevronDown
               className={`h-4 w-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
             />
           </button>
         ) : (
-          <p className="text-xs text-graphite">Notes</p>
+          <p className="text-xs text-graphite">{label}</p>
         )}
         {expanded && (
           <div className="relative mt-2">

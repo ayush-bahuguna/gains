@@ -22,7 +22,8 @@ type SessionRow = {
 type TemplateRow = {
   id: string
   name: string
-  exerciseNames: string[]
+  description: string
+  exerciseCount: number
 }
 
 function timeOfDay() {
@@ -73,7 +74,7 @@ export function JournalHome() {
           .limit(3),
         supabase
           .from('templates')
-          .select('id, name, template_exercises(position, exercise_definitions(name))')
+          .select('id, name, description, template_exercises(id)')
           .order('created_at', { ascending: false })
           .limit(3),
       ])
@@ -82,22 +83,12 @@ export function JournalHome() {
       setUnfinished(unfinishedRows?.[0] ?? null)
       setRecentSessions(recentRows ?? [])
       setRecentTemplates(
-        (templateRows ?? []).map((t) => {
-          const names = (
-            (t.template_exercises ?? []) as unknown as {
-              position: number
-              exercise_definitions: { name: string }[] | { name: string } | null
-            }[]
-          )
-            .sort((a, b) => a.position - b.position)
-            .map((te) =>
-              Array.isArray(te.exercise_definitions)
-                ? te.exercise_definitions[0]?.name
-                : te.exercise_definitions?.name,
-            )
-            .filter((n): n is string => Boolean(n))
-          return { id: t.id, name: t.name, exerciseNames: names }
-        }),
+        (templateRows ?? []).map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          exerciseCount: (t.template_exercises ?? []).length,
+        })),
       )
       setLoading(false)
     }
@@ -185,8 +176,8 @@ export function JournalHome() {
                 key={t.id}
                 icon={<IconDumbbell className="h-4 w-4" />}
                 title={t.name}
-                exercisePreview={t.exerciseNames.length > 0 ? t.exerciseNames.join(', ') : 'No exercises yet'}
-                exerciseCount={t.exerciseNames.length}
+                description={t.description}
+                exerciseCount={t.exerciseCount}
                 onClick={() => navigate(`/templates/${t.id}`)}
               />
             ))}

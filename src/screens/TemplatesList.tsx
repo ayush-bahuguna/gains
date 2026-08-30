@@ -10,7 +10,8 @@ import { supabase } from '../lib/supabase'
 type TemplateRow = {
   id: string
   name: string
-  exerciseNames: string[]
+  description: string
+  exerciseCount: number
 }
 
 export function TemplatesList() {
@@ -25,28 +26,18 @@ export function TemplatesList() {
     async function load() {
       const { data } = await supabase
         .from('templates')
-        .select('id, name, template_exercises(position, exercise_definitions(name))')
+        .select('id, name, description, template_exercises(id)')
         .order('created_at', { ascending: false })
 
       if (cancelled) return
 
       setTemplates(
-        (data ?? []).map((t) => {
-          const rows = (
-            (t.template_exercises ?? []) as unknown as {
-              position: number
-              exercise_definitions: { name: string }[] | { name: string } | null
-            }[]
-          )
-            .sort((a, b) => a.position - b.position)
-            .map((te) =>
-              Array.isArray(te.exercise_definitions)
-                ? te.exercise_definitions[0]?.name
-                : te.exercise_definitions?.name,
-            )
-            .filter((n): n is string => Boolean(n))
-          return { id: t.id, name: t.name, exerciseNames: rows }
-        }),
+        (data ?? []).map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          exerciseCount: (t.template_exercises ?? []).length,
+        })),
       )
       setLoading(false)
     }
@@ -99,8 +90,8 @@ export function TemplatesList() {
                 key={t.id}
                 icon={<IconDumbbell className="h-4 w-4" />}
                 title={t.name}
-                exercisePreview={t.exerciseNames.length > 0 ? t.exerciseNames.join(', ') : 'No exercises yet'}
-                exerciseCount={t.exerciseNames.length}
+                description={t.description}
+                exerciseCount={t.exerciseCount}
                 onClick={() => navigate(`/templates/${t.id}`)}
               />
             ))}

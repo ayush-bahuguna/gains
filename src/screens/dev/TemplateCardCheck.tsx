@@ -9,7 +9,7 @@ export function TemplateCardCheck() {
       <TemplateCard
         icon={<IconDumbbell className="h-4 w-4" />}
         title="Push Day"
-        exercisePreview="Bench, Incline Press, Shoulder Press, Cable Fly, Tricep Pushdown"
+        description="Classic push-day split hitting chest, shoulders, and triceps."
         exerciseCount={6}
       />
     </div>

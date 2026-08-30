@@ -7,6 +7,7 @@ import { IconButton } from '../components/IconButton'
 import { IconChevronLeft, IconPencil, IconTrash } from '../components/icons'
 import { Marquee } from '../components/Marquee'
 import { Modal } from '../components/Modal'
+import { NotesBox } from '../components/NotesBox'
 import { SearchInput } from '../components/SearchInput'
 import { TemplateExerciseRow } from '../components/TemplateExerciseRow'
 import { TextInput } from '../components/TextInput'
@@ -14,7 +15,7 @@ import { getDailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
 import { useClickOutside } from '../lib/useClickOutside'
 
-type TemplateData = { id: string; name: string }
+type TemplateData = { id: string; name: string; description: string }
 type TemplateExercise = { id: string; exercise_db_id: string; name: string } & ExerciseDefinitionInfo
 type ExerciseDefinition = { id: string; name: string; aliases: string[] } & ExerciseDefinitionInfo
 
@@ -40,7 +41,7 @@ export function TemplateDetails() {
 
     async function load() {
       const [{ data: templateRow }, { data: exerciseRows }, { data: defRows }] = await Promise.all([
-        supabase.from('templates').select('id, name').eq('id', id).maybeSingle(),
+        supabase.from('templates').select('id, name, description').eq('id', id).maybeSingle(),
         supabase
           .from('template_exercises')
           .select(
@@ -201,7 +202,7 @@ export function TemplateDetails() {
   return (
     <div>
       <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
-        <div className="space-y-4 px-6 pb-4 pt-6">
+        <div className="px-6 pb-4 pt-6">
           <div className="flex items-center gap-2">
             <IconButton
               icon={<IconChevronLeft className="h-4 w-4" />}
@@ -239,15 +240,26 @@ export function TemplateDetails() {
               aria-label="Delete template"
             />
           </div>
-
-          <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
-            {starting ? 'Starting...' : 'Start Session'}
-          </Button>
         </div>
         <HeaderDivider />
       </div>
 
-      <div className="space-y-6 px-6 pb-6 pt-4">
+      <div className="space-y-4 px-6 pb-4 pt-4">
+        <NotesBox
+          label="Description"
+          placeholder="No description"
+          value={template.description}
+          readOnly
+          bordered={false}
+          collapsible={false}
+          autoHeight
+        />
+        <Button variant="primary" className="w-full" onClick={startSessionFromTemplate} disabled={starting}>
+          {starting ? 'Starting...' : 'Start Session'}
+        </Button>
+      </div>
+
+      <div className="space-y-6 px-6 pb-6 pt-0">
         <div>
           <p className="mb-2 text-lg font-bold text-ink">Exercises</p>
           <div className="relative" ref={searchRef}>

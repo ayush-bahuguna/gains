@@ -131,7 +131,7 @@ export function KitchenSink() {
         <TemplateCard
           icon={<IconDumbbell className="h-4 w-4" />}
           title="Pull Day"
-          exercisePreview="Deadlift, Barbell Row, Lat Pulldown"
+          description="Back and pull-focused day."
           exerciseCount={5}
         />
       </Section>
