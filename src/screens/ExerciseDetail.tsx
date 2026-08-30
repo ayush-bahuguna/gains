@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
+import { ChipLegend } from '../components/ChipLegend'
 import { Chip } from '../components/Chip'
 import { ExerciseImages } from '../components/ExerciseImages'
 import { HeaderDivider } from '../components/HeaderDivider'
@@ -96,6 +97,7 @@ export function ExerciseDetail() {
               <h1 className="sr-only">{exercise.name}</h1>
               <Marquee text={exercise.name} className="min-w-0 flex-1 text-2xl font-bold text-ink" />
             </div>
+            {(exercise.primary_muscle || exercise.category || exercise.equipment) && <ChipLegend />}
           </div>
         </div>
         <HeaderDivider />

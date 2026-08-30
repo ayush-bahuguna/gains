@@ -21,9 +21,10 @@ const DRAG_COMMIT_THRESHOLD = 70
 
 function dayColor(dayOfWeek: number, attended: boolean, isFuture: boolean): string {
   if (isFuture) return 'var(--color-mist)'
-  if (dayOfWeek === 0) return attended ? 'var(--color-gold)' : 'var(--color-ink)'
-  if (dayOfWeek === 6) return attended ? 'var(--color-forest)' : 'var(--color-coral)'
-  return attended ? 'var(--color-sage)' : 'var(--color-coral)'
+  if (attended) return 'var(--color-sage)'
+  // Sundays read as a neutral rest day (grey) rather than the same
+  // "skipped" red as other days.
+  return dayOfWeek === 0 ? 'var(--color-graphite)' : 'var(--color-crimson)'
 }
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa']

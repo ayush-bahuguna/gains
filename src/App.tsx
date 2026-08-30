@@ -25,6 +25,7 @@ import { AlertsCheck } from './screens/dev/AlertsCheck'
 import { EmptyStatesCheck } from './screens/dev/EmptyStatesCheck'
 import { TemplateCardCheck } from './screens/dev/TemplateCardCheck'
 import { ExerciseCardCheck } from './screens/dev/ExerciseCardCheck'
+import { ChipLegendCheck } from './screens/dev/ChipLegendCheck'
 import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
 import { CalendarCheck } from './screens/dev/CalendarCheck'
@@ -124,6 +125,7 @@ function App() {
       <Route path="/_dev/empty" element={<EmptyStatesCheck />} />
       <Route path="/_dev/templatecard" element={<TemplateCardCheck />} />
       <Route path="/_dev/exercisecard" element={<ExerciseCardCheck />} />
+      <Route path="/_dev/chiplegend" element={<ChipLegendCheck />} />
       <Route path="/_dev/misc" element={<MiscCheck />} />
       <Route path="/_dev/voice" element={<VoiceCheck />} />
       <Route path="/_dev/calendar" element={<CalendarCheck />} />

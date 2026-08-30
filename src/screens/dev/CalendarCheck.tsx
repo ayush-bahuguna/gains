@@ -14,8 +14,8 @@ export function CalendarCheck() {
       toISODate(new Date(year, month, 2)),
       toISODate(new Date(year, month, 3)),
       toISODate(new Date(year, month, 9)),
-      toISODate(new Date(year, month, nthDayOfWeek(6))), // first Saturday — dark green
-      toISODate(new Date(year, month, nthDayOfWeek(0))), // first Sunday — gold
+      toISODate(new Date(year, month, nthDayOfWeek(6))), // first Saturday — attended
+      toISODate(new Date(year, month, nthDayOfWeek(0))), // first Sunday — attended
     ])
   }, [year, month])
 
@@ -23,8 +23,8 @@ export function CalendarCheck() {
     <div className="mx-auto max-w-[480px] space-y-3 bg-paper p-6">
       <h1 className="mb-3 text-2xl font-bold">Calendar / Activity Graph (§19)</h1>
       <p className="text-sm text-graphite">
-        Drag left/right to change months. Green = attended, red = skipped, gold = attended Sunday,
-        dark green = attended Saturday, black = skipped Sunday, grey = future.
+        Drag left/right to change months. Green = attended, dark red = skipped, grey = skipped
+        Sunday or future.
       </p>
       <MonthActivityGraph
         year={year}

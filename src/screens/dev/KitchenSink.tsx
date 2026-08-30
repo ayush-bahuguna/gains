@@ -6,6 +6,7 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { Checkbox } from '../../components/Checkbox'
 import { Chip } from '../../components/Chip'
+import { ChipLegend } from '../../components/ChipLegend'
 import { Dropdown } from '../../components/Dropdown'
 import { EmptyState } from '../../components/EmptyState'
 import { ExerciseBlock } from '../../components/ExerciseBlock'
@@ -124,6 +125,7 @@ export function KitchenSink() {
             Today
           </Chip>
           <Chip variant="filter">This Week</Chip>
+          <ChipLegend />
         </div>
       </Section>
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ChipLegend } from '../components/ChipLegend'
 import { Chip } from '../components/Chip'
 import { EmptyState } from '../components/EmptyState'
 import { ExerciseCard } from '../components/ExerciseCard'
@@ -91,8 +92,9 @@ export function ExerciseLibrary() {
   return (
     <div>
       <div ref={headerRef} className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
-        <div className="px-6 pb-4 pt-6">
-          <h1 className="text-2xl font-bold text-ink">Exercise Library</h1>
+        <div className="flex items-center gap-2 px-6 pb-4 pt-6">
+          <h1 className="min-w-0 flex-1 text-2xl font-bold text-ink">Exercise Library</h1>
+          <ChipLegend />
         </div>
         <HeaderDivider />
       </div>

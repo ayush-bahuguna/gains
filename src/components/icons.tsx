@@ -119,6 +119,16 @@ export function IconXCircle(props: IconProps) {
   )
 }
 
+export function IconHelpCircle(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.3 9.4a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2-2.7 3.8" />
+      <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export function IconAlertTriangle(props: IconProps) {
   return (
     <svg {...base(props)}>

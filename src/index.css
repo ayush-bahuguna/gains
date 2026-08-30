@@ -13,10 +13,8 @@
   --color-lavender: #ddb7f8;
   --color-highlight: #fff4a3;
   --color-mist: #dcd8cc;
-  /* Activity graph only — distinct from --color-sun (pale yellow) and
-     --color-sage: a rich gold and a still-darker, blue-leaning green. */
-  --color-gold: #d4af37;
-  --color-forest: #3f6f4d;
+  /* Activity graph only — a darker red than --color-coral, for skipped days. */
+  --color-crimson: #a13a2c;
 
   /* Typography — spec §4.1 (Shantell Sans for headers, Covered By Your
      Grace for body/data) */
