@@ -67,7 +67,7 @@ export function Me() {
     <div>
       <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
         <div className="px-6 pb-4 pt-6">
-          <h1 className="text-3xl font-bold text-ink">Me</h1>
+          <h1 className="text-2xl font-bold text-ink">Me</h1>
         </div>
         <HeaderDivider />
       </div>

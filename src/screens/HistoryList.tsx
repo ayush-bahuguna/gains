@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { HeaderDivider } from '../components/HeaderDivider'
 import { IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
+import { useMeasure } from '../lib/useMeasure'
 import { supabase } from '../lib/supabase'
 
 type FilterKey = 'all' | 'week' | 'month'
@@ -42,6 +43,7 @@ export function HistoryList() {
   const [filter, setFilter] = useState<FilterKey>('all')
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [headerRef, headerSize] = useMeasure<HTMLDivElement>()
 
   useEffect(() => {
     let cancelled = false
@@ -81,25 +83,30 @@ export function HistoryList() {
 
   return (
     <div>
-      <div className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
-        <div className="space-y-4 px-6 pb-4 pt-6">
+      <div ref={headerRef} className="sticky top-[env(safe-area-inset-top)] z-30 bg-paper">
+        <div className="px-6 pb-4 pt-6">
           <h1 className="text-2xl font-bold text-ink">History</h1>
-
-          <div className="flex gap-2 overflow-x-auto">
-            {filters.map((f) => (
-              <Chip
-                key={f.key}
-                variant="filter"
-                selected={filter === f.key}
-                onClick={() => setFilter(f.key)}
-                className="cursor-pointer whitespace-nowrap"
-              >
-                {f.label}
-              </Chip>
-            ))}
-          </div>
         </div>
         <HeaderDivider />
+      </div>
+
+      <div
+        className="sticky z-20 bg-paper px-6 py-3"
+        style={{ top: `calc(env(safe-area-inset-top) + ${headerSize.height}px)` }}
+      >
+        <div className="flex gap-2 overflow-x-auto">
+          {filters.map((f) => (
+            <Chip
+              key={f.key}
+              variant="filter"
+              selected={filter === f.key}
+              onClick={() => setFilter(f.key)}
+              className="cursor-pointer whitespace-nowrap"
+            >
+              {f.label}
+            </Chip>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4 px-6 pb-6 pt-4">
