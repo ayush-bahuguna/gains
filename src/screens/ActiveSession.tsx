@@ -178,17 +178,27 @@ export function ActiveSession() {
     return newSet
   }
 
-  function updateSetById(exerciseId: string, setId: string, field: 'weight' | 'reps', value: number) {
+  function applySetFieldLocally(exerciseId: string, setId: string, field: 'weight' | 'reps', value: number) {
     setExercises((prev) =>
       prev.map((ex) =>
         ex.id === exerciseId ? { ...ex, sets: ex.sets.map((s) => (s.id === setId ? { ...s, [field]: value } : s)) } : ex,
       ),
     )
+  }
+
+  function writeSetField(setId: string, field: 'weight' | 'reps', value: number) {
     supabase
       .from('sets')
       .update({ [field]: value })
       .eq('id', setId)
       .then()
+  }
+
+  // Local state + DB write together, for single-shot callers (voice
+  // commands, undo) where there's no separate blur to commit on.
+  function updateSetById(exerciseId: string, setId: string, field: 'weight' | 'reps', value: number) {
+    applySetFieldLocally(exerciseId, setId, field, value)
+    writeSetField(setId, field, value)
   }
 
   function updateSetWeightAndReps(exerciseId: string, setId: string, weight: number, reps: number) {
@@ -221,7 +231,18 @@ export function ActiveSession() {
     await insertSetAndAttach(exercises[exerciseIndex].id, 0, 0)
   }
 
+  // Keystrokes only update local state — the field could still be mid-edit
+  // (e.g. "2" on the way to "25"). Writing to the DB on every keystroke
+  // raced separate un-ordered network requests against each other and could
+  // leave a stale intermediate digit persisted even though the UI showed
+  // the final value. commitSet (on blur) is what actually persists.
   function updateSet(exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) {
+    const exercise = exercises[exerciseIndex]
+    const set = exercise.sets[setIndex]
+    if (set.id) applySetFieldLocally(exercise.id, set.id, field, value)
+  }
+
+  function commitSet(exerciseIndex: number, setIndex: number, field: 'weight' | 'reps', value: number) {
     const exercise = exercises[exerciseIndex]
     const set = exercise.sets[setIndex]
     if (set.id) updateSetById(exercise.id, set.id, field, value)
@@ -462,6 +483,9 @@ export function ActiveSession() {
 
   async function finishSession() {
     if (!session || finishing) return
+    // A set field that's still focused hasn't blurred/committed yet — force
+    // it to, so tapping "Finish" mid-edit doesn't drop the last change.
+    ;(document.activeElement as HTMLElement | null)?.blur?.()
     setFinishing(true)
     // Re-fetch rather than trust whatever was attached at start — the user
     // may have long-press-rerolled the Journal Home gif at any point during
@@ -587,6 +611,7 @@ export function ActiveSession() {
             isCurrent={ex.id === currentExerciseId}
             onAddSet={() => addSet(i)}
             onUpdateSet={(setIndex, field, value) => updateSet(i, setIndex, field, value)}
+            onCommitSet={(setIndex, field, value) => commitSet(i, setIndex, field, value)}
             onDeleteSet={(setIndex) => deleteSet(i, setIndex)}
             onRename={(newName) => renameExercise(i, newName)}
             onDelete={() => deleteExercise(i)}

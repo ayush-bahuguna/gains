@@ -24,6 +24,7 @@ type ExerciseBlockProps = {
   isCurrent?: boolean
   onAddSet?: () => void
   onUpdateSet?: (index: number, field: 'weight' | 'reps', value: number) => void
+  onCommitSet?: (index: number, field: 'weight' | 'reps', value: number) => void
   onDeleteSet?: (index: number) => void
   onRename?: (newTitle: string) => void
   onDelete?: () => void
@@ -36,6 +37,7 @@ export function ExerciseBlock({
   isCurrent,
   onAddSet,
   onUpdateSet,
+  onCommitSet,
   onDeleteSet,
   onRename,
   onDelete,
@@ -92,7 +94,7 @@ export function ExerciseBlock({
       </div>
 
       <div className="mt-2">
-        <SetTable sets={sets} onUpdateSet={onUpdateSet} onDeleteSet={onDeleteSet} />
+        <SetTable sets={sets} onUpdateSet={onUpdateSet} onCommitSet={onCommitSet} onDeleteSet={onDeleteSet} />
       </div>
 
       <button

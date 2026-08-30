@@ -13,6 +13,7 @@ export type SetRowData = {
 type SetTableProps = {
   sets: SetRowData[]
   onUpdateSet?: (index: number, field: 'weight' | 'reps', value: number) => void
+  onCommitSet?: (index: number, field: 'weight' | 'reps', value: number) => void
   onDeleteSet?: (index: number) => void
 }
 
@@ -39,7 +40,7 @@ function RowDivider({ seed }: { seed: number }) {
   )
 }
 
-export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
+export function SetTable({ sets, onUpdateSet, onCommitSet, onDeleteSet }: SetTableProps) {
   const editable = Boolean(onUpdateSet)
 
   return (
@@ -66,6 +67,7 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
                 placeholder="0"
                 value={s.weight === 0 ? '' : s.weight}
                 onChange={(e) => onUpdateSet?.(i, 'weight', e.target.value === '' ? 0 : Number(e.target.value))}
+                onBlur={(e) => onCommitSet?.(i, 'weight', e.target.value === '' ? 0 : Number(e.target.value))}
                 onWheel={blurOnWheel}
                 className="w-full min-w-0 rounded-lg bg-ink/5 px-2 py-1 text-ink placeholder:text-graphite/50 focus:outline-none"
               />
@@ -79,6 +81,7 @@ export function SetTable({ sets, onUpdateSet, onDeleteSet }: SetTableProps) {
                 placeholder="0"
                 value={s.reps === 0 ? '' : s.reps}
                 onChange={(e) => onUpdateSet?.(i, 'reps', e.target.value === '' ? 0 : Number(e.target.value))}
+                onBlur={(e) => onCommitSet?.(i, 'reps', e.target.value === '' ? 0 : Number(e.target.value))}
                 onWheel={blurOnWheel}
                 className="w-full min-w-0 rounded-lg bg-ink/5 px-2 py-1 text-ink placeholder:text-graphite/50 focus:outline-none"
               />
