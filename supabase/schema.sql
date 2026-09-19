@@ -238,3 +238,28 @@ create policy "template_exercises write"
       where t.id = template_exercises.template_id and t.user_id = auth.uid()
     )
   );
+
+-- ─────────────────────────────────────────────────────────
+-- skipped_days — user-entered reason for a day with no completed session
+-- (a skipped day has no workout_sessions row to attach a reason to)
+-- ─────────────────────────────────────────────────────────
+create table if not exists skipped_days (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  date date not null,
+  reason text not null default '',
+  created_at timestamptz not null default now(),
+  unique (user_id, date)
+);
+
+create index if not exists skipped_days_user_id_date_idx
+  on skipped_days (user_id, date desc);
+
+alter table skipped_days enable row level security;
+
+drop policy if exists "skipped_days owner access" on skipped_days;
+create policy "skipped_days owner access"
+  on skipped_days for all
+  to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());

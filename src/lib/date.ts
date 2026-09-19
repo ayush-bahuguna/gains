@@ -46,3 +46,31 @@ const MONTH_NAMES = [
 export function formatMonthYear(year: number, month: number): string {
   return `${MONTH_NAMES[month]} ${year}`
 }
+
+/** Local-timezone-safe inverse of toISODate — parses a bare YYYY-MM-DD
+ *  string as local midnight, avoiding `new Date(iso)`'s UTC-parse rollover. */
+export function fromISODate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function ordinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return 'th'
+  switch (day % 10) {
+    case 1:
+      return 'st'
+    case 2:
+      return 'nd'
+    case 3:
+      return 'rd'
+    default:
+      return 'th'
+  }
+}
+
+/** e.g. "Monday/13th" — the DayTooltip header format. */
+export function formatWeekdayOrdinal(date: Date): string {
+  return `${WEEKDAY_NAMES[date.getDay()]}/${date.getDate()}${ordinalSuffix(date.getDate())}`
+}

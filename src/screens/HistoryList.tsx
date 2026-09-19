@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { HeaderDivider } from '../components/HeaderDivider'
 import { IconNotebook } from '../components/icons'
 import { ListCard } from '../components/ListCard'
+import { formatDuration } from '../lib/duration'
 import { useMeasure } from '../lib/useMeasure'
 import { supabase } from '../lib/supabase'
 
@@ -23,13 +24,6 @@ type SessionRow = {
   start_time: string
   end_time: string
   exerciseCount: number
-}
-
-function formatDuration(ms: number) {
-  const totalMinutes = Math.max(0, Math.round(ms / 60000))
-  const h = Math.floor(totalMinutes / 60)
-  const m = totalMinutes % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
 function isoDateDaysAgo(days: number) {

@@ -1,20 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
+import { DayTooltip } from '../components/DayTooltip'
 import { HeaderDivider } from '../components/HeaderDivider'
 import { IconGoogle, IconUser } from '../components/icons'
 import { MonthActivityGraph } from '../components/MonthActivityGraph'
-import { daysInMonth, toISODate } from '../lib/date'
+import { daysInMonth, fromISODate, toISODate } from '../lib/date'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
+type DaySummary = { sessionId: string; exerciseCount: number; durationMs: number }
+type ActiveDay = { dateStr: string; cellRect: DOMRect; reasonDraft: string }
+
 export function Me() {
   const { user, loading, signInWithGoogle, signOut } = useAuthStore()
+  const navigate = useNavigate()
 
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const [attendedDates, setAttendedDates] = useState<Set<string> | null>(null)
+  const [daySummaries, setDaySummaries] = useState<Map<string, DaySummary>>(new Map())
+  const [skipReasons, setSkipReasons] = useState<Map<string, string>>(new Map())
+  const [activeDay, setActiveDay] = useState<ActiveDay | null>(null)
+
+  const attendedDates = useMemo(() => new Set(daySummaries.keys()), [daySummaries])
 
   useEffect(() => {
     if (!user) return
@@ -23,14 +33,27 @@ export function Me() {
     async function load() {
       const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
       const end = toISODate(new Date(year, month, daysInMonth(year, month)))
-      const { data } = await supabase
-        .from('workout_sessions')
-        .select('date')
-        .not('end_time', 'is', null)
-        .gte('date', start)
-        .lte('date', end)
+      const [{ data: sessionRows }, { data: skipRows }] = await Promise.all([
+        supabase
+          .from('workout_sessions')
+          .select('id, date, start_time, end_time, exercises(count)')
+          .not('end_time', 'is', null)
+          .gte('date', start)
+          .lte('date', end),
+        supabase.from('skipped_days').select('date, reason').gte('date', start).lte('date', end),
+      ])
       if (cancelled) return
-      setAttendedDates(new Set((data ?? []).map((r) => r.date)))
+
+      const summaries = new Map<string, DaySummary>()
+      for (const r of sessionRows ?? []) {
+        summaries.set(r.date, {
+          sessionId: r.id,
+          exerciseCount: (r.exercises as { count: number }[] | null)?.[0]?.count ?? 0,
+          durationMs: new Date(r.end_time as string).getTime() - new Date(r.start_time).getTime(),
+        })
+      }
+      setDaySummaries(summaries)
+      setSkipReasons(new Map((skipRows ?? []).map((r) => [r.date, r.reason as string])))
     }
 
     load()
@@ -38,6 +61,26 @@ export function Me() {
       cancelled = true
     }
   }, [user, year, month])
+
+  function handleDayClick(dateStr: string, cellRect: DOMRect) {
+    setActiveDay({ dateStr, cellRect, reasonDraft: skipReasons.get(dateStr) ?? '' })
+  }
+
+  function commitSkipReason(dateStr: string, reason: string) {
+    if (!user) return
+    supabase
+      .from('skipped_days')
+      .upsert({ user_id: user.id, date: dateStr, reason }, { onConflict: 'user_id,date' })
+      .then()
+    setSkipReasons((prev) => new Map(prev).set(dateStr, reason))
+  }
+
+  function closeTooltip() {
+    if (activeDay && !daySummaries.has(activeDay.dateStr)) {
+      commitSkipReason(activeDay.dateStr, activeDay.reasonDraft)
+    }
+    setActiveDay(null)
+  }
 
   if (loading) {
     return (
@@ -88,13 +131,30 @@ export function Me() {
           <MonthActivityGraph
             year={year}
             month={month}
-            attendedDates={attendedDates ?? new Set()}
+            attendedDates={attendedDates}
             onMonthChange={(y, m) => {
               setYear(y)
               setMonth(m)
             }}
+            onDayClick={handleDayClick}
           />
         </div>
+        <DayTooltip
+          open={activeDay !== null}
+          anchorRect={activeDay?.cellRect ?? null}
+          date={activeDay ? fromISODate(activeDay.dateStr) : null}
+          session={activeDay ? (daySummaries.get(activeDay.dateStr) ?? null) : null}
+          reason={activeDay?.reasonDraft ?? ''}
+          onReasonChange={(value) =>
+            setActiveDay((prev) => (prev ? { ...prev, reasonDraft: value } : prev))
+          }
+          onReasonFocus={() => {}}
+          onReasonBlur={() => {
+            if (activeDay) commitSkipReason(activeDay.dateStr, activeDay.reasonDraft)
+          }}
+          onNavigate={(sessionId) => navigate(`/history/${sessionId}`)}
+          onClose={closeTooltip}
+        />
         <Button variant="primary" onClick={signOut} className="mt-4 w-full">
           Log out
         </Button>

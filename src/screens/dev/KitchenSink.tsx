@@ -7,6 +7,7 @@ import { Card } from '../../components/Card'
 import { Checkbox } from '../../components/Checkbox'
 import { Chip } from '../../components/Chip'
 import { ChipLegend } from '../../components/ChipLegend'
+import { DayTooltip } from '../../components/DayTooltip'
 import { Dropdown } from '../../components/Dropdown'
 import { EmptyState } from '../../components/EmptyState'
 import { ExerciseBlock } from '../../components/ExerciseBlock'
@@ -58,6 +59,8 @@ export function KitchenSink() {
   const [radio, setRadio] = useState('a')
   const [weight, setWeight] = useState(80)
   const [voiceState, setVoiceState] = useState<VoicePanelState>('idle')
+  const [tooltipVariant, setTooltipVariant] = useState<'session' | 'skip' | null>(null)
+  const [tooltipReason, setTooltipReason] = useState('Felt sick')
 
   const today = new Date()
   const [graphYear, setGraphYear] = useState(today.getFullYear())
@@ -205,6 +208,31 @@ export function KitchenSink() {
             setGraphYear(y)
             setGraphMonth(m)
           }}
+        />
+      </Section>
+
+      <Section title="Day Tooltip (§22)">
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => setTooltipVariant('session')}>
+            Show session tooltip
+          </Button>
+          <Button variant="secondary" onClick={() => setTooltipVariant('skip')}>
+            Show skip tooltip
+          </Button>
+        </div>
+        <DayTooltip
+          open={tooltipVariant !== null}
+          anchorRect={new DOMRect(40, 400, 40, 40)}
+          date={new Date(2026, 8, 13)}
+          session={
+            tooltipVariant === 'session' ? { sessionId: 'mock', exerciseCount: 5, durationMs: 52 * 60000 } : null
+          }
+          reason={tooltipReason}
+          onReasonChange={setTooltipReason}
+          onReasonFocus={() => {}}
+          onReasonBlur={() => {}}
+          onNavigate={() => {}}
+          onClose={() => setTooltipVariant(null)}
         />
       </Section>
 

@@ -29,6 +29,7 @@ import { ChipLegendCheck } from './screens/dev/ChipLegendCheck'
 import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
 import { CalendarCheck } from './screens/dev/CalendarCheck'
+import { DayTooltipCheck } from './screens/dev/DayTooltipCheck'
 import { KitchenSink } from './screens/dev/KitchenSink'
 
 function App() {
@@ -129,6 +130,7 @@ function App() {
       <Route path="/_dev/misc" element={<MiscCheck />} />
       <Route path="/_dev/voice" element={<VoiceCheck />} />
       <Route path="/_dev/calendar" element={<CalendarCheck />} />
+      <Route path="/_dev/daytooltip" element={<DayTooltipCheck />} />
       <Route path="/_dev/components" element={<KitchenSink />} />
     </Routes>
   )

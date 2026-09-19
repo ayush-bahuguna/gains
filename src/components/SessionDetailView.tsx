@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDailyMotivation } from '../lib/dailyMotivation'
+import { formatDuration } from '../lib/duration'
 import { supabase } from '../lib/supabase'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -39,13 +40,6 @@ function bestEpley(sets: SetData[]) {
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-}
-
-function formatDuration(ms: number) {
-  const totalMinutes = Math.max(0, Math.round(ms / 60000))
-  const h = Math.floor(totalMinutes / 60)
-  const m = totalMinutes % 60
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
 function StatTile({ label, value }: { label: string; value: string | number }) {

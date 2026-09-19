@@ -13,11 +13,14 @@ type MonthActivityGraphProps = {
   /** Defaults to the real current date — override for testing. */
   today?: Date
   onMonthChange?: (year: number, month: number) => void
+  onDayClick?: (dateStr: string, cellRect: DOMRect) => void
 }
 
 const SQUARE_SIZE = 40
 const GAP = 8
 const DRAG_COMMIT_THRESHOLD = 70
+const TAP_MAX_DISTANCE = 8
+const TAP_MAX_DURATION = 400
 
 function dayColor(dayOfWeek: number, attended: boolean, isFuture: boolean): string {
   if (isFuture) return 'var(--color-mist)'
@@ -29,7 +32,14 @@ function dayColor(dayOfWeek: number, attended: boolean, isFuture: boolean): stri
 
 const DAY_LETTERS = ['S', 'M', 'T', 'W', 'Th', 'F', 'Sa']
 
-export function MonthActivityGraph({ year, month, attendedDates, today, onMonthChange }: MonthActivityGraphProps) {
+export function MonthActivityGraph({
+  year,
+  month,
+  attendedDates,
+  today,
+  onMonthChange,
+  onDayClick,
+}: MonthActivityGraphProps) {
   const now = today ?? new Date()
   const atCurrentMonth = isSameMonth({ year, month }, { year: now.getFullYear(), month: now.getMonth() })
   const todayISO = toISODate(now)
@@ -48,6 +58,8 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
   const [transformX, setTransformX] = useState(0)
   const [transitionEnabled, setTransitionEnabled] = useState(true)
   const startXRef = useRef(0)
+  const startYRef = useRef(0)
+  const startTimeRef = useRef(0)
   const width = containerSize.width || 1
 
   const numDays = daysInMonth(year, month)
@@ -62,6 +74,8 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
     if (stage !== 'idle') return
     setDragging(true)
     startXRef.current = e.clientX
+    startYRef.current = e.clientY
+    startTimeRef.current = Date.now()
     e.currentTarget.setPointerCapture(e.pointerId)
   }
 
@@ -74,9 +88,30 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
     setDragX(delta)
   }
 
-  function handlePointerUp() {
+  function resetDrag() {
+    setDragging(false)
+    setDragX(0)
+  }
+
+  function handlePointerUp(e: ReactPointerEvent<HTMLDivElement>) {
     if (!dragging) return
     setDragging(false)
+
+    const dx = e.clientX - startXRef.current
+    const dy = e.clientY - startYRef.current
+    const isTap = Math.hypot(dx, dy) < TAP_MAX_DISTANCE && Date.now() - startTimeRef.current < TAP_MAX_DURATION
+    if (isTap) {
+      setDragX(0)
+      // setPointerCapture retargets e.target to the capturing container for
+      // every event of this pointer, pointerup included — elementFromPoint
+      // does a real geometric hit-test instead, unaffected by that capture.
+      const hit = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+      const cell = hit?.closest<HTMLElement>('[data-date]')
+      if (cell && cell.dataset.future !== 'true') {
+        onDayClick?.(cell.dataset.date!, cell.getBoundingClientRect())
+      }
+      return
+    }
 
     if (dragX <= -DRAG_COMMIT_THRESHOLD && !atCurrentMonth) {
       setDirection('next')
@@ -150,7 +185,7 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          onPointerCancel={resetDrag}
         >
           {columnsPerRow > 0 && (
             <div
@@ -168,7 +203,13 @@ export function MonthActivityGraph({ year, month, attendedDates, today, onMonthC
                 const isFuture = dateStr > todayISO
                 const color = dayColor(date.getDay(), attended, isFuture)
                 return (
-                  <div key={dateStr} className="relative" style={{ width: SQUARE_SIZE, height: SQUARE_SIZE }}>
+                  <div
+                    key={dateStr}
+                    className="relative"
+                    style={{ width: SQUARE_SIZE, height: SQUARE_SIZE }}
+                    data-date={dateStr}
+                    data-future={isFuture ? 'true' : undefined}
+                  >
                     <Sketchy
                       width={SQUARE_SIZE}
                       height={SQUARE_SIZE}
