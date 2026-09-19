@@ -157,7 +157,7 @@ export function DayTooltip({
             }}
             className="mt-2 w-full text-left"
           >
-            <Marquee text={reason} className="text-sm text-ink" />
+            <Marquee text={reason} className="text-sm text-ink" font="body" />
           </button>
         )}
       </div>

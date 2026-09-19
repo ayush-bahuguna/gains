@@ -4,9 +4,11 @@ import type { CSSProperties } from 'react'
 type MarqueeProps = {
   text: string
   className?: string
+  /** Which font token to render with. Defaults to the display font (titles). */
+  font?: 'display' | 'body'
 }
 
-export function Marquee({ text, className = '' }: MarqueeProps) {
+export function Marquee({ text, className = '', font = 'display' }: MarqueeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
   const [overflow, setOverflow] = useState(0)
@@ -25,7 +27,11 @@ export function Marquee({ text, className = '' }: MarqueeProps) {
   }, [text])
 
   return (
-    <div ref={containerRef} className={`overflow-hidden ${className}`} style={{ fontFamily: 'var(--font-display)' }}>
+    <div
+      ref={containerRef}
+      className={`overflow-hidden ${className}`}
+      style={{ fontFamily: font === 'body' ? 'var(--font-body)' : 'var(--font-display)' }}
+    >
       <span
         ref={textRef}
         className={`inline-block whitespace-nowrap ${overflow > 0 ? 'marquee-text' : ''}`}
