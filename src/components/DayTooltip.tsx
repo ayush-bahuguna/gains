@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { formatDuration } from '../lib/duration'
 import { formatWeekdayOrdinal } from '../lib/date'
@@ -52,10 +52,18 @@ export function DayTooltip({
 
   useClickOutside(containerRef, onClose, open)
 
-  function setContainerRef(el: HTMLDivElement | null) {
-    containerRef.current = el
-    measureRef(el)
-  }
+  // Combines the two refs into one stable callback identity — an inline
+  // (unmemoized) function here would give the `ref` prop a new reference on
+  // every render, which makes React detach+reattach the node every render,
+  // re-triggering useMeasure's ResizeObserver setup (and its setState) in a
+  // tight loop ("Maximum update depth exceeded").
+  const setContainerRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      containerRef.current = el
+      measureRef(el)
+    },
+    [measureRef],
+  )
 
   useEffect(() => {
     if (!open) return
