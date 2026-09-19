@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDailyMotivation } from '../lib/dailyMotivation'
 import { formatDuration } from '../lib/duration'
+import { bestEpley } from '../lib/personalRecord'
 import { supabase } from '../lib/supabase'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -29,17 +30,11 @@ type ExerciseData = {
   sets: SetData[]
 }
 
-function epley1RM(weight: number, reps: number) {
-  if (weight <= 0 || reps <= 0) return 0
-  return weight * (1 + reps / 30)
-}
-
-function bestEpley(sets: SetData[]) {
-  return sets.reduce((max, s) => Math.max(max, epley1RM(s.weight, s.reps)), 0)
-}
-
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 function StatTile({ label, value }: { label: string; value: string | number }) {
@@ -77,7 +72,9 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
       const [{ data: sessionRow }, { data: exerciseRows }] = await Promise.all([
         supabase
           .from('workout_sessions')
-          .select('id, name, date, start_time, end_time, notes, motivation_gif_url, motivation_quote')
+          .select(
+            'id, name, date, start_time, end_time, notes, motivation_gif_url, motivation_quote',
+          )
           .eq('id', sessionId)
           .maybeSingle(),
         supabase
@@ -109,7 +106,11 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
       }))
       setExercises(ex)
 
-      const dbIds = [...new Set(ex.map((e) => e.exercise_db_id).filter((v): v is string => Boolean(v)))]
+      const dbIds = [
+        ...new Set(
+          ex.map((e) => e.exercise_db_id).filter((v): v is string => Boolean(v)),
+        ),
+      ]
       if (dbIds.length > 0) {
         const { data: historicalRows } = await supabase
           .from('exercises')
@@ -200,7 +201,10 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
     return (
       <div className="flex flex-col items-center gap-3 p-6 text-center">
         <p className="text-sm text-graphite">Session not found.</p>
-        <Button variant="secondary" onClick={() => navigate(variant === 'history' ? '/history' : '/journal')}>
+        <Button
+          variant="secondary"
+          onClick={() => navigate(variant === 'history' ? '/history' : '/journal')}
+        >
           {variant === 'history' ? 'Back to History' : 'Back to Journal'}
         </Button>
       </div>
@@ -222,7 +226,10 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
 
       <Card>
         <div className="flex items-center justify-between gap-2">
-          <Marquee text={session.name} className="min-w-0 flex-1 text-xl font-bold text-ink" />
+          <Marquee
+            text={session.name}
+            className="min-w-0 flex-1 text-xl font-bold text-ink"
+          />
           <span
             className="shrink-0 rounded-full px-4 py-1.5 text-base font-bold text-ink"
             style={{ backgroundColor: 'var(--color-sage)' }}
@@ -248,7 +255,9 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
               className="w-full rounded-2xl border border-ink/10 object-cover"
             />
             {session.motivation_quote && (
-              <p className="mt-2 text-sm italic text-graphite">"{session.motivation_quote}"</p>
+              <p className="mt-2 text-sm italic text-graphite">
+                "{session.motivation_quote}"
+              </p>
             )}
           </div>
         )}
@@ -264,7 +273,9 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
       <div className="space-y-4">
         {exercises.map((e) => {
           const best = bestEpley(e.sets)
-          const historical = e.exercise_db_id ? (historicalMax.get(e.exercise_db_id) ?? 0) : 0
+          const historical = e.exercise_db_id
+            ? (historicalMax.get(e.exercise_db_id) ?? 0)
+            : 0
           const isPR = historical > 0 && best > historical
           return (
             <Card key={e.id}>
@@ -282,7 +293,11 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
               <div className="mt-2">
                 <SetTable sets={e.sets.map((s, i) => ({ setNumber: i + 1, ...s }))} />
               </div>
-              {best > 0 && <p className="mt-2 text-xs text-graphite">Est. 1RM: {Math.round(best)} kg</p>}
+              {best > 0 && (
+                <p className="mt-2 text-xs text-graphite">
+                  Est. 1RM: {Math.round(best)} kg
+                </p>
+              )}
             </Card>
           )
         })}
@@ -299,25 +314,47 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
 
       {variant === 'summary' ? (
         <div className="flex gap-3">
-          <Button variant="secondary" className="flex-1" onClick={() => navigate('/journal')}>
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={() => navigate('/journal')}
+          >
             Done
           </Button>
-          <Button variant="primary" className="flex-1" onClick={repeatWorkout} disabled={repeating}>
+          <Button
+            variant="primary"
+            className="flex-1"
+            onClick={repeatWorkout}
+            disabled={repeating}
+          >
             {repeating ? 'Creating...' : 'Repeat This Workout'}
           </Button>
         </div>
       ) : (
         <div className="flex gap-3">
-          <Button variant="secondary" className="flex-1" onClick={() => setConfirmDelete(true)}>
+          <Button
+            variant="secondary"
+            className="flex-1"
+            onClick={() => setConfirmDelete(true)}
+          >
             Delete
           </Button>
-          <Button variant="primary" className="flex-1" onClick={repeatWorkout} disabled={repeating}>
+          <Button
+            variant="primary"
+            className="flex-1"
+            onClick={repeatWorkout}
+            disabled={repeating}
+          >
             {repeating ? 'Creating...' : 'Repeat Workout'}
           </Button>
         </div>
       )}
 
-      <Modal isOpen={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete session?">
+      <Modal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Delete session?"
+      >
         <p>This permanently removes "{session.name}" and all its exercises/sets.</p>
         <div className="mt-5 flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>

@@ -15,8 +15,8 @@ export function DayTooltipCheck() {
     <div className="mx-auto max-w-[480px] space-y-3 bg-paper p-6">
       <h1 className="mb-3 text-2xl font-bold">Day Tooltip (§22)</h1>
       <p className="text-sm text-graphite">
-        Tap a day in the Me screen's calendar to see this anchored near the tapped cell. Below
-        triggers each variant directly against a fixed mock position.
+        Tap a day in the Me screen's calendar to see this anchored near the tapped cell.
+        Below triggers each variant directly against a fixed mock position.
       </p>
       <div className="flex gap-3">
         <Button variant="secondary" onClick={() => setVariant('session')}>
@@ -27,10 +27,15 @@ export function DayTooltipCheck() {
         </Button>
       </div>
       <DayTooltip
+        key={variant ?? 'closed'}
         open={variant !== null}
         anchorRect={MOCK_ANCHOR}
         date={MOCK_DATE}
-        session={variant === 'session' ? { sessionId: 'mock', exerciseCount: 5, durationMs: 52 * 60000 } : null}
+        session={
+          variant === 'session'
+            ? { sessionId: 'mock', exerciseCount: 5, durationMs: 52 * 60000, prCount: 2 }
+            : null
+        }
         reason={reason}
         onReasonChange={setReason}
         onReasonFocus={() => {}}

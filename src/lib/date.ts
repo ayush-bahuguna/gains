@@ -19,12 +19,19 @@ export function firstWeekdayOfMonth(year: number, month: number): number {
   return new Date(year, month, 1).getDay()
 }
 
-export function addMonths(year: number, month: number, delta: number): { year: number; month: number } {
+export function addMonths(
+  year: number,
+  month: number,
+  delta: number,
+): { year: number; month: number } {
   const total = year * 12 + month + delta
   return { year: Math.floor(total / 12), month: ((total % 12) + 12) % 12 }
 }
 
-export function isSameMonth(a: { year: number; month: number }, b: { year: number; month: number }): boolean {
+export function isSameMonth(
+  a: { year: number; month: number },
+  b: { year: number; month: number },
+): boolean {
   return a.year === b.year && a.month === b.month
 }
 
@@ -54,7 +61,15 @@ export function fromISODate(iso: string): Date {
   return new Date(y, m - 1, d)
 }
 
-const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+]
 
 function ordinalSuffix(day: number): string {
   if (day >= 11 && day <= 13) return 'th'
@@ -70,7 +85,7 @@ function ordinalSuffix(day: number): string {
   }
 }
 
-/** e.g. "Monday/13th" — the DayTooltip header format. */
+/** e.g. "Monday / 13th" — the DayTooltip header format. */
 export function formatWeekdayOrdinal(date: Date): string {
-  return `${WEEKDAY_NAMES[date.getDay()]}/${date.getDate()}${ordinalSuffix(date.getDate())}`
+  return `${WEEKDAY_NAMES[date.getDay()]} / ${date.getDate()}${ordinalSuffix(date.getDate())}`
 }

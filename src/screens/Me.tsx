@@ -7,10 +7,16 @@ import { HeaderDivider } from '../components/HeaderDivider'
 import { IconGoogle, IconUser } from '../components/icons'
 import { MonthActivityGraph } from '../components/MonthActivityGraph'
 import { daysInMonth, fromISODate, toISODate } from '../lib/date'
+import { bestEpley } from '../lib/personalRecord'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
-type DaySummary = { sessionId: string; exerciseCount: number; durationMs: number }
+type DaySummary = {
+  sessionId: string
+  exerciseCount: number
+  durationMs: number
+  prCount: number
+}
 type ActiveDay = { dateStr: string; cellRect: DOMRect; reasonDraft: string }
 
 export function Me() {
@@ -36,20 +42,87 @@ export function Me() {
       const [{ data: sessionRows }, { data: skipRows }] = await Promise.all([
         supabase
           .from('workout_sessions')
-          .select('id, date, start_time, end_time, exercises(count)')
+          .select(
+            'id, date, start_time, end_time, exercises(id, exercise_db_id, sets(weight, reps))',
+          )
           .not('end_time', 'is', null)
           .gte('date', start)
           .lte('date', end),
-        supabase.from('skipped_days').select('date, reason').gte('date', start).lte('date', end),
+        supabase
+          .from('skipped_days')
+          .select('date, reason')
+          .gte('date', start)
+          .lte('date', end),
       ])
       if (cancelled) return
 
+      type SetRow = { weight: number; reps: number }
+      type ExerciseRow = {
+        id: string
+        exercise_db_id: string | null
+        sets: SetRow[] | null
+      }
+      type SessionRow = {
+        id: string
+        date: string
+        start_time: string
+        end_time: string
+        exercises: ExerciseRow[] | null
+      }
+      const sessions = (sessionRows ?? []) as SessionRow[]
+
+      // For each exercise_db_id used this month, find every other session
+      // (any date, any month) that also used it, to know whether this
+      // month's best set is actually a new all-time PR — same "is this the
+      // best ever" comparison SessionDetailView.tsx uses per-session.
+      const dbIds = [
+        ...new Set(
+          sessions.flatMap((s) =>
+            (s.exercises ?? [])
+              .map((e) => e.exercise_db_id)
+              .filter((v): v is string => Boolean(v)),
+          ),
+        ),
+      ]
+      const bestPerSessionByDbId = new Map<string, Map<string, number>>()
+      if (dbIds.length > 0) {
+        const { data: historicalRows } = await supabase
+          .from('exercises')
+          .select('session_id, exercise_db_id, sets(weight, reps)')
+          .in('exercise_db_id', dbIds)
+        if (cancelled) return
+        for (const row of historicalRows ?? []) {
+          const dbId = row.exercise_db_id as string
+          const best = bestEpley(row.sets ?? [])
+          const bySession = bestPerSessionByDbId.get(dbId) ?? new Map<string, number>()
+          bySession.set(
+            row.session_id,
+            Math.max(bySession.get(row.session_id) ?? 0, best),
+          )
+          bestPerSessionByDbId.set(dbId, bySession)
+        }
+      }
+
       const summaries = new Map<string, DaySummary>()
-      for (const r of sessionRows ?? []) {
+      for (const r of sessions) {
+        const exercises = r.exercises ?? []
+        const prCount = exercises.filter((e) => {
+          if (!e.exercise_db_id) return false
+          const bySession = bestPerSessionByDbId.get(e.exercise_db_id)
+          if (!bySession) return false
+          const ownBest = bestEpley(e.sets ?? [])
+          let historicalMax = 0
+          for (const [sessionId, best] of bySession) {
+            if (sessionId !== r.id) historicalMax = Math.max(historicalMax, best)
+          }
+          return historicalMax > 0 && ownBest > historicalMax
+        }).length
+
         summaries.set(r.date, {
           sessionId: r.id,
-          exerciseCount: (r.exercises as { count: number }[] | null)?.[0]?.count ?? 0,
-          durationMs: new Date(r.end_time as string).getTime() - new Date(r.start_time).getTime(),
+          exerciseCount: exercises.length,
+          durationMs: new Date(r.end_time).getTime() - new Date(r.start_time).getTime(),
+          prCount,
         })
       }
       setDaySummaries(summaries)
@@ -95,7 +168,11 @@ export function Me() {
       <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-3xl font-bold text-ink">Gains</h1>
         <p className="text-sm text-graphite">Sign in to start your workout journal.</p>
-        <Button variant="primary" leftIcon={<IconGoogle className="h-4 w-4" />} onClick={signInWithGoogle}>
+        <Button
+          variant="primary"
+          leftIcon={<IconGoogle className="h-4 w-4" />}
+          onClick={signInWithGoogle}
+        >
           Continue with Google
         </Button>
       </div>
@@ -140,6 +217,7 @@ export function Me() {
           />
         </div>
         <DayTooltip
+          key={activeDay?.dateStr ?? 'closed'}
           open={activeDay !== null}
           anchorRect={activeDay?.cellRect ?? null}
           date={activeDay ? fromISODate(activeDay.dateStr) : null}

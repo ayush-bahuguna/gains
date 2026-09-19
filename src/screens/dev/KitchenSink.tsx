@@ -80,7 +80,9 @@ export function KitchenSink() {
     <div className="mx-auto max-w-[480px] space-y-10 border-x border-ink/10 bg-paper p-6 pb-28">
       <div>
         <h1 className="text-4xl font-bold text-ink">Kitchen Sink</h1>
-        <p className="text-sm text-graphite">Full design system — phase 2 final pass. Dev only.</p>
+        <p className="text-sm text-graphite">
+          Full design system — phase 2 final pass. Dev only.
+        </p>
       </div>
 
       <Section title="Buttons">
@@ -133,14 +135,23 @@ export function KitchenSink() {
       </Section>
 
       <Section title="Cards">
-        <ListCard icon={<IconDumbbell className="h-5 w-5" />} title="Push Day" subtitle="6 exercises" />
+        <ListCard
+          icon={<IconDumbbell className="h-5 w-5" />}
+          title="Push Day"
+          subtitle="6 exercises"
+        />
         <TemplateCard
           icon={<IconDumbbell className="h-4 w-4" />}
           title="Pull Day"
           description="Back and pull-focused day."
           exerciseCount={5}
         />
-        <ExerciseCard name="Bench Press" imageUrl={null} primaryMuscle="chest" equipment="barbell" />
+        <ExerciseCard
+          name="Bench Press"
+          imageUrl={null}
+          primaryMuscle="chest"
+          equipment="barbell"
+        />
       </Section>
 
       <Section title="Exercise Block">
@@ -159,8 +170,20 @@ export function KitchenSink() {
       </Section>
 
       <Section title="Progress">
-        <ProgressBar label="Session Progress" current={4} total={6} unit="exercises" color="sage" />
-        <ProgressBar label="Exercise Progress" current={3} total={5} unit="sets" color="sky" />
+        <ProgressBar
+          label="Session Progress"
+          current={4}
+          total={6}
+          unit="exercises"
+          color="sage"
+        />
+        <ProgressBar
+          label="Exercise Progress"
+          current={3}
+          total={5}
+          unit="sets"
+          color="sky"
+        />
       </Section>
 
       <Section title="Notes">
@@ -186,7 +209,8 @@ export function KitchenSink() {
         <VoicePanel
           state={voiceState}
           onMicClick={() => {
-            if (voiceState === 'idle' || voiceState === 'error') setVoiceState('listening')
+            if (voiceState === 'idle' || voiceState === 'error')
+              setVoiceState('listening')
             else if (voiceState === 'listening') setVoiceState('processing')
             else setVoiceState('idle')
           }}
@@ -221,11 +245,19 @@ export function KitchenSink() {
           </Button>
         </div>
         <DayTooltip
+          key={tooltipVariant ?? 'closed'}
           open={tooltipVariant !== null}
           anchorRect={new DOMRect(40, 400, 40, 40)}
           date={new Date(2026, 8, 13)}
           session={
-            tooltipVariant === 'session' ? { sessionId: 'mock', exerciseCount: 5, durationMs: 52 * 60000 } : null
+            tooltipVariant === 'session'
+              ? {
+                  sessionId: 'mock',
+                  exerciseCount: 5,
+                  durationMs: 52 * 60000,
+                  prCount: 2,
+                }
+              : null
           }
           reason={tooltipReason}
           onReasonChange={setTooltipReason}

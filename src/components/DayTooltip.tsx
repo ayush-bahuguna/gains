@@ -5,10 +5,16 @@ import { formatWeekdayOrdinal } from '../lib/date'
 import { useClickOutside } from '../lib/useClickOutside'
 import { useMeasure } from '../lib/useMeasure'
 import { IconChevronRight } from './icons'
+import { Marquee } from './Marquee'
 import { Sketchy } from './Sketchy'
 import { TextInput } from './TextInput'
 
-type DaySession = { sessionId: string; exerciseCount: number; durationMs: number }
+type DaySession = {
+  sessionId: string
+  exerciseCount: number
+  durationMs: number
+  prCount: number
+}
 
 type DayTooltipProps = {
   open: boolean
@@ -27,6 +33,9 @@ type DayTooltipProps = {
 const WIDTH = 220
 const MARGIN = 8
 const GAP = 8
+const SESSION_HEIGHT = 76
+const SKIP_EDIT_HEIGHT = 124
+const SKIP_VIEW_HEIGHT = 92
 const AUTO_DISMISS_MS = 3000
 
 export function DayTooltip({
@@ -44,6 +53,12 @@ export function DayTooltip({
   const [measureRef, size] = useMeasure<HTMLDivElement>()
   const containerRef = useRef<HTMLDivElement>(null)
   const [reasonFocused, setReasonFocused] = useState(false)
+  // A saved (non-empty) reason starts in read-only marquee form; tapping it
+  // switches to the editable input. Component is remounted per-day (see the
+  // `key` on <DayTooltip> in Me.tsx), so this initial value is only ever
+  // computed once per day shown, from that day's own saved reason.
+  const [editingReason, setEditingReason] = useState(reason.trim() === '')
+  const [autoFocusReason, setAutoFocusReason] = useState(false)
   const onCloseRef = useRef(onClose)
 
   useEffect(() => {
@@ -74,7 +89,11 @@ export function DayTooltip({
 
   if (!open || !anchorRect || !date) return null
 
-  const height = session ? 76 : 124
+  const height = session
+    ? SESSION_HEIGHT
+    : editingReason
+      ? SKIP_EDIT_HEIGHT
+      : SKIP_VIEW_HEIGHT
 
   let left = anchorRect.left + anchorRect.width / 2 - WIDTH / 2
   left = Math.min(Math.max(left, MARGIN), window.innerWidth - WIDTH - MARGIN)
@@ -89,7 +108,12 @@ export function DayTooltip({
       style={{ left, top, width: WIDTH, height }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <Sketchy width={size.width} height={size.height} radius={16} fill="var(--color-paper)" />
+      <Sketchy
+        width={size.width}
+        height={size.height}
+        radius={16}
+        fill="var(--color-paper)"
+      />
       <div className="relative z-10">
         <p className="text-xs font-medium text-ink">{formatWeekdayOrdinal(date)}</p>
         {session ? (
@@ -101,14 +125,17 @@ export function DayTooltip({
             <span className="text-xs text-graphite">
               {session.exerciseCount} exercise{session.exerciseCount === 1 ? '' : 's'} ·{' '}
               {formatDuration(session.durationMs)}
+              {session.prCount > 0 &&
+                ` · ${session.prCount} PR${session.prCount === 1 ? '' : 's'}`}
             </span>
             <IconChevronRight className="h-4 w-4 shrink-0 text-ink" />
           </button>
-        ) : (
+        ) : editingReason ? (
           <div className="mt-2">
             <TextInput
               placeholder="Reason for skipping..."
               value={reason}
+              autoFocus={autoFocusReason}
               onChange={(e) => onReasonChange(e.target.value)}
               onFocus={() => {
                 setReasonFocused(true)
@@ -117,9 +144,21 @@ export function DayTooltip({
               onBlur={() => {
                 setReasonFocused(false)
                 onReasonBlur()
+                if (reason.trim() !== '') setEditingReason(false)
               }}
             />
           </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setEditingReason(true)
+              setAutoFocusReason(true)
+            }}
+            className="mt-2 w-full text-left"
+          >
+            <Marquee text={reason} className="text-sm text-ink" />
+          </button>
         )}
       </div>
     </div>,
