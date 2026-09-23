@@ -103,27 +103,27 @@ export function JournalHome() {
             <p className="mt-2 text-sm italic text-graphite">"{motivation.quote}"</p>
           </div>
         )}
-      </Card>
 
-      <div className="space-y-3">
-        <Button
-          variant="primary"
-          className="w-full"
-          onClick={startSession}
-          disabled={starting}
-        >
-          {starting ? 'Starting...' : 'Start Session'}
-        </Button>
-        {unfinished && (
+        <div className="mt-4 space-y-3">
           <Button
-            variant="secondary"
+            variant="primary"
             className="w-full"
-            onClick={() => navigate(`/session/${unfinished.id}`)}
+            onClick={startSession}
+            disabled={starting}
           >
-            Resume "{unfinished.name}"
+            {starting ? 'Starting...' : 'Start Session'}
           </Button>
-        )}
-      </div>
+          {unfinished && (
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => navigate(`/session/${unfinished.id}`)}
+            >
+              Resume "{unfinished.name}"
+            </Button>
+          )}
+        </div>
+      </Card>
 
       <Card onClick={() => navigate('/exercises')} className="cursor-pointer text-left">
         <div className="flex items-start gap-3">
