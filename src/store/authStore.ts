@@ -7,6 +7,7 @@ type AuthState = {
   session: Session | null
   loading: boolean
   signInWithGoogle: () => Promise<void>
+  continueAsGuest: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -23,13 +24,24 @@ export const useAuthStore = create<AuthState>(() => ({
       options: { redirectTo: window.location.origin },
     })
   },
+  // Creates a real, unique auth.uid() with no email/OAuth identity attached —
+  // RLS treats it exactly like a real account (fully isolated from every
+  // other user), so every existing screen works unmodified. Requires
+  // Anonymous Sign-ins to be enabled in the Supabase dashboard.
+  continueAsGuest: async () => {
+    await supabase.auth.signInAnonymously()
+  },
   signOut: async () => {
     await supabase.auth.signOut()
   },
 }))
 
 supabase.auth.getSession().then(({ data }) => {
-  useAuthStore.setState({ session: data.session, user: data.session?.user ?? null, loading: false })
+  useAuthStore.setState({
+    session: data.session,
+    user: data.session?.user ?? null,
+    loading: false,
+  })
 })
 
 supabase.auth.onAuthStateChange((_event, session) => {
