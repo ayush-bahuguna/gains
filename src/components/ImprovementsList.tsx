@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { nextMilestonePct } from '../lib/analytics'
 import { weightForE1RM, type BestSetPoint } from '../lib/personalRecord'
-import { IconChevronDown } from './icons'
 
 type ImprovementItem = {
   name: string
@@ -43,10 +42,10 @@ export function ImprovementsList({ items }: { items: ImprovementItem[] }) {
               className="flex w-full items-center justify-between gap-2 py-1 text-left"
             >
               <span className="flex min-w-0 items-center gap-1.5">
+                <span aria-hidden className="shrink-0 text-ink">
+                  •
+                </span>
                 <span className="min-w-0 truncate text-sm text-ink">{item.name}</span>
-                <IconChevronDown
-                  className={`h-3.5 w-3.5 shrink-0 text-graphite transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                />
               </span>
               <span
                 className={`shrink-0 text-sm font-medium ${
@@ -58,7 +57,7 @@ export function ImprovementsList({ items }: { items: ImprovementItem[] }) {
               </span>
             </button>
             {open && (
-              <div className="space-y-0.5 pb-2 text-xs text-graphite">
+              <div className="ml-4 space-y-0.5 pb-2 text-xs text-graphite">
                 <p>
                   Baseline (first sessions): {roundWeight(item.baselinePoint.weight)} kg ×{' '}
                   {item.baselinePoint.reps}
