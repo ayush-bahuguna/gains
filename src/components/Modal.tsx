@@ -13,7 +13,13 @@ type ModalProps = {
   children: ReactNode
 }
 
-export function Modal({ isOpen, onClose, title, showCloseButton = false, children }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  showCloseButton = false,
+  children,
+}: ModalProps) {
   const [ref, size] = useMeasure<HTMLDivElement>()
 
   if (!isOpen) return null
@@ -24,18 +30,36 @@ export function Modal({ isOpen, onClose, title, showCloseButton = false, childre
     >
       <div
         ref={ref}
-        className="relative max-h-[80vh] w-full max-w-sm overflow-y-auto rounded-[20px] bg-paper p-5"
+        className="relative w-full max-w-sm rounded-[20px] bg-paper"
         onClick={(e) => e.stopPropagation()}
       >
-        <Sketchy width={size.width} height={size.height} radius={20} fill="var(--color-paper)" />
+        <Sketchy
+          width={size.width}
+          height={size.height}
+          radius={20}
+          fill="var(--color-paper)"
+        />
         {showCloseButton && (
           <div className="absolute right-1 top-1 z-20">
-            <IconButton icon={<IconX className="h-5 w-5" />} aria-label="Close" onClick={onClose} />
+            <IconButton
+              icon={<IconX className="h-5 w-5" />}
+              aria-label="Close"
+              onClick={onClose}
+            />
           </div>
         )}
-        <div className="relative z-10">
+        {/* Scrolling lives on this inner div, not the ref'd/Sketchy-bearing
+            outer one — an absolutely-positioned child (the Sketchy border)
+            scrolls along with its containing block's content when that
+            block is itself the scroll container, which made the border
+            visibly scroll away with the content instead of staying put. */}
+        <div className="relative z-10 max-h-[80vh] overflow-y-auto p-5">
           {title && (
-            <h2 className={`mb-2 text-xl font-bold text-ink ${showCloseButton ? 'pr-10' : ''}`}>{title}</h2>
+            <h2
+              className={`mb-2 text-xl font-bold text-ink ${showCloseButton ? 'pr-10' : ''}`}
+            >
+              {title}
+            </h2>
           )}
           {children}
         </div>
