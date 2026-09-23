@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { addMonths, daysInMonth, formatMonthYear, isSameMonth, toISODate } from '../lib/date'
+import {
+  addMonths,
+  daysInMonth,
+  formatMonthYear,
+  isSameMonth,
+  toISODate,
+} from '../lib/date'
 import { Sketchy } from './Sketchy'
 import { useMeasure } from '../lib/useMeasure'
 
@@ -21,10 +27,23 @@ const GAP = 8
 const DRAG_COMMIT_THRESHOLD = 70
 const TAP_MAX_DISTANCE = 8
 const TAP_MAX_DURATION = 400
+// Spills past the cell's own edges (absorbed by GAP between cells) so the
+// hand-drawn ring reads as something scrawled over the square, not a shape
+// that lives neatly inside it.
+const CIRCLE_SIZE = SQUARE_SIZE + 16
 
-function dayColor(dayOfWeek: number, attended: boolean, isFuture: boolean): string {
+function dayColor(
+  dayOfWeek: number,
+  attended: boolean,
+  isFuture: boolean,
+  isToday: boolean,
+): string {
   if (isFuture) return 'var(--color-mist)'
   if (attended) return 'var(--color-sage)'
+  // Today stays neutral grey (not yet a "missed" red) until either an entry
+  // lands (→ sage) or the day actually passes (→ the red/grey branch below,
+  // once a later render sees this date as no longer today).
+  if (isToday) return 'var(--color-mist)'
   // Sundays read as a neutral rest day (grey) rather than the same
   // "skipped" red as other days.
   return dayOfWeek === 0 ? 'var(--color-graphite)' : 'var(--color-crimson)'
@@ -41,7 +60,10 @@ export function MonthActivityGraph({
   onDayClick,
 }: MonthActivityGraphProps) {
   const now = today ?? new Date()
-  const atCurrentMonth = isSameMonth({ year, month }, { year: now.getFullYear(), month: now.getMonth() })
+  const atCurrentMonth = isSameMonth(
+    { year, month },
+    { year: now.getFullYear(), month: now.getMonth() },
+  )
   const todayISO = toISODate(now)
 
   const [containerRef, containerSize] = useMeasure<HTMLDivElement>()
@@ -66,7 +88,9 @@ export function MonthActivityGraph({
   // As many fixed-size squares as fit edge to edge across the container,
   // wrapping to however many rows that takes — not aligned to calendar weeks.
   const columnsPerRow =
-    containerSize.width > 0 ? Math.max(1, Math.floor((containerSize.width + GAP) / (SQUARE_SIZE + GAP))) : 0
+    containerSize.width > 0
+      ? Math.max(1, Math.floor((containerSize.width + GAP) / (SQUARE_SIZE + GAP)))
+      : 0
   const numRows = columnsPerRow > 0 ? Math.ceil(numDays / columnsPerRow) : 0
   const gridHeight = numRows > 0 ? numRows * SQUARE_SIZE + (numRows - 1) * GAP : 0
 
@@ -99,7 +123,9 @@ export function MonthActivityGraph({
 
     const dx = e.clientX - startXRef.current
     const dy = e.clientY - startYRef.current
-    const isTap = Math.hypot(dx, dy) < TAP_MAX_DISTANCE && Date.now() - startTimeRef.current < TAP_MAX_DURATION
+    const isTap =
+      Math.hypot(dx, dy) < TAP_MAX_DISTANCE &&
+      Date.now() - startTimeRef.current < TAP_MAX_DURATION
     if (isTap) {
       setDragX(0)
       // setPointerCapture retargets e.target to the capturing container for
@@ -173,13 +199,20 @@ export function MonthActivityGraph({
 
   return (
     <div className="select-none">
-      <p className="mb-2 text-center text-sm font-medium text-ink">{formatMonthYear(year, month)}</p>
-      <div ref={containerRef} className="overflow-hidden" style={{ height: gridHeight || undefined }}>
+      <p className="mb-2 text-center text-sm font-medium text-ink">
+        {formatMonthYear(year, month)}
+      </p>
+      <div
+        ref={containerRef}
+        className="overflow-hidden"
+        style={{ height: gridHeight || undefined }}
+      >
         <div
           className="touch-pan-y"
           style={{
             transform: `translateX(${translateX}px)`,
-            transition: dragging || !transitionEnabled ? 'none' : 'transform 180ms ease-out',
+            transition:
+              dragging || !transitionEnabled ? 'none' : 'transform 180ms ease-out',
           }}
           onTransitionEnd={handleTransitionEnd}
           onPointerDown={handlePointerDown}
@@ -201,7 +234,8 @@ export function MonthActivityGraph({
                 const dateStr = toISODate(date)
                 const attended = attendedDates.has(dateStr)
                 const isFuture = dateStr > todayISO
-                const color = dayColor(date.getDay(), attended, isFuture)
+                const isToday = dateStr === todayISO
+                const color = dayColor(date.getDay(), attended, isFuture, isToday)
                 return (
                   <div
                     key={dateStr}
@@ -226,6 +260,28 @@ export function MonthActivityGraph({
                     >
                       {DAY_LETTERS[date.getDay()]}
                     </span>
+                    {isToday && !attended && (
+                      <div
+                        className="pointer-events-none absolute"
+                        style={{
+                          left: (SQUARE_SIZE - CIRCLE_SIZE) / 2,
+                          top: (SQUARE_SIZE - CIRCLE_SIZE) / 2,
+                          width: CIRCLE_SIZE,
+                          height: CIRCLE_SIZE,
+                        }}
+                      >
+                        <Sketchy
+                          width={CIRCLE_SIZE}
+                          height={CIRCLE_SIZE}
+                          shape="ellipse"
+                          stroke="var(--color-ink)"
+                          strokeWidth={2.5}
+                          roughness={2.2}
+                          bowing={1.4}
+                          multiStroke
+                        />
+                      </div>
+                    )}
                   </div>
                 )
               })}
