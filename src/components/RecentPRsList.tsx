@@ -19,7 +19,7 @@ export function RecentPRsList({ bestSets }: RecentPRsListProps) {
   )
 
   return (
-    <Card>
+    <Card variant="filled">
       <div className="space-y-2">
         {recent.map((p) => (
           <div key={p.date} className="flex items-center justify-between gap-2">

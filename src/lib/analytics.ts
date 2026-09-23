@@ -29,13 +29,20 @@ export function computeImprovement(
   if (allTimePoints.length < 2) return null
 
   const ascending = [...allTimePoints].sort((a, b) => (a.date < b.date ? -1 : 1))
-  const baselinePoints = ascending.slice(0, 3)
+
+  // Reserve at least 1 session beyond the baseline window so "current" can
+  // never be computed from the exact same sessions as "baseline" — otherwise
+  // an exercise with only 2-3 total sessions (all inside the selected period)
+  // trivially shows 0% even when the graph visibly trends upward across them.
+  const baselineCount = Math.min(3, ascending.length - 1)
+  const baselinePoints = ascending.slice(0, baselineCount)
   const baseline = Math.max(...baselinePoints.map((p) => p.e1rm))
   if (baseline <= 0) return null
 
+  const candidatePoints = ascending.slice(baselineCount)
   const periodPoints = periodStart
-    ? ascending.filter((p) => p.date >= periodStart)
-    : ascending
+    ? candidatePoints.filter((p) => p.date >= periodStart)
+    : candidatePoints
   if (periodPoints.length === 0) return null
 
   const current = Math.max(...periodPoints.map((p) => p.e1rm))

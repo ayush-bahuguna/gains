@@ -269,8 +269,6 @@ export function Analytics() {
   const [selectedDbId, setSelectedDbId] = useState<string | null>(null)
   const effectiveDbId = selectedDbId ?? exercises[0]?.dbId ?? null
   const selected = exercises.find((e) => e.dbId === effectiveDbId) ?? null
-  const graphPoints =
-    selected?.bestSets.map((p) => ({ date: p.date, e1rm: p.e1rm })) ?? []
 
   return (
     <div>
@@ -322,7 +320,7 @@ export function Analytics() {
         </div>
 
         {expandedTile === 'improvements' && (
-          <Card>
+          <Card variant="filled">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">
               Improvements
             </p>
@@ -330,7 +328,7 @@ export function Analytics() {
           </Card>
         )}
         {expandedTile === 'coverage' && (
-          <Card>
+          <Card variant="filled">
             <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">
               Training Coverage
             </p>
@@ -405,7 +403,7 @@ export function Analytics() {
                   More →
                 </button>
               </div>
-              <StrengthGraph points={graphPoints} />
+              <StrengthGraph points={selected?.bestSets ?? []} />
 
               <div className="mt-4">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">

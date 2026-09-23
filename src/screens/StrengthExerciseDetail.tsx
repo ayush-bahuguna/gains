@@ -79,9 +79,7 @@ export function StrengthExerciseDetail() {
           <p className="text-sm text-graphite">No history found for this exercise.</p>
         ) : (
           <>
-            <StrengthGraph
-              points={exercise.bestSets.map((p) => ({ date: p.date, e1rm: p.e1rm }))}
-            />
+            <StrengthGraph points={exercise.bestSets} />
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">
                 Recent PRs

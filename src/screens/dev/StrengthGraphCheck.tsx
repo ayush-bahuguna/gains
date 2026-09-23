@@ -1,10 +1,10 @@
 import { StrengthGraph } from '../../components/StrengthGraph'
 
 const gapped = [
-  { date: '2026-06-02', e1rm: 80 },
-  { date: '2026-06-16', e1rm: 84 },
-  { date: '2026-09-10', e1rm: 82 },
-  { date: '2026-09-21', e1rm: 90 },
+  { date: '2026-06-02', weight: 80, reps: 6, e1rm: 96 },
+  { date: '2026-06-16', weight: 82.5, reps: 6, e1rm: 99 },
+  { date: '2026-09-10', weight: 80, reps: 8, e1rm: 101 },
+  { date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 },
 ]
 
 export function StrengthGraphCheck() {
@@ -19,13 +19,16 @@ export function StrengthGraphCheck() {
 
       <div className="space-y-2">
         <p className="text-sm text-graphite">Single point</p>
-        <StrengthGraph points={[{ date: '2026-09-21', e1rm: 90 }]} />
+        <StrengthGraph
+          points={[{ date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 }]}
+        />
       </div>
 
       <div className="space-y-2">
         <p className="text-sm text-graphite">
           Multiple points with a long real-world gap (Jun 16 → Sep 10) — drawn evenly
-          spaced, not scaled by elapsed time, and nothing is interpolated across the gap.
+          spaced, not scaled by elapsed time, nothing interpolated across the gap. Tap a
+          point to open its tooltip.
         </p>
         <StrengthGraph points={gapped} />
       </div>
