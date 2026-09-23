@@ -5,17 +5,22 @@ import { Sketchy } from './Sketchy'
 const TRACK_WIDTH = 8
 const MIN_THUMB_HEIGHT = 32
 const EDGE_GAP = 4
+const HIDE_DELAY_MS = 900
 
 // Decorative, hand-drawn stand-in for the native scrollbar (hidden globally
 // in index.css) — the app scrolls at the <html> level (see Layout.tsx), so
 // this tracks document.documentElement directly rather than any per-screen
-// container. Not draggable: this app is touch/wheel-scroll-first, and a
-// draggable thumb needs pointer-capture/drag math this purely-visual ask
-// doesn't call for.
+// container. Just the thumb, no full-length track — it fades in while
+// actively scrolling and fades back out shortly after, like a native
+// overlay scrollbar. Not draggable: this app is touch/wheel-scroll-first,
+// and a draggable thumb needs pointer-capture/drag math this purely-visual
+// ask doesn't call for.
 export function ScrollIndicator() {
   const [trackRef, track] = useMeasure<HTMLDivElement>()
   const [scroll, setScroll] = useState({ scrollTop: 0, scrollHeight: 0, clientHeight: 0 })
+  const [active, setActive] = useState(false)
   const rafRef = useRef<number | null>(null)
+  const hideTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     const read = () => {
@@ -26,17 +31,23 @@ export function ScrollIndicator() {
         clientHeight: el.clientHeight,
       })
     }
-    const schedule = () => {
+    const scheduleRead = () => {
       if (rafRef.current != null) return
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null
         read()
       })
     }
+    const onScroll = () => {
+      scheduleRead()
+      setActive(true)
+      if (hideTimerRef.current != null) window.clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = window.setTimeout(() => setActive(false), HIDE_DELAY_MS)
+    }
 
     read()
-    window.addEventListener('scroll', schedule, { passive: true })
-    window.addEventListener('resize', schedule, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', scheduleRead, { passive: true })
     // html/body/#root all have height:100% pinned in index.css, so their own
     // box never resizes from overflowing content — a ResizeObserver reports
     // the observed element's own box changing, not a descendant's
@@ -45,14 +56,15 @@ export function ScrollIndicator() {
     // async-content-driven height changes (e.g. data finishing loading).
     const growthTarget =
       document.getElementById('root')?.firstElementChild ?? document.body
-    const observer = new ResizeObserver(schedule)
+    const observer = new ResizeObserver(scheduleRead)
     observer.observe(growthTarget)
 
     return () => {
-      window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', scheduleRead)
       observer.disconnect()
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+      if (hideTimerRef.current != null) window.clearTimeout(hideTimerRef.current)
     }
   }, [])
 
@@ -82,29 +94,24 @@ export function ScrollIndicator() {
         }}
       >
         {canScroll && (
-          <>
+          <div
+            className="absolute left-0 transition-opacity duration-300"
+            style={{
+              top: thumbTop,
+              width: TRACK_WIDTH,
+              height: thumbHeight,
+              opacity: active ? 1 : 0,
+            }}
+          >
             <Sketchy
               width={TRACK_WIDTH}
-              height={track.height}
+              height={thumbHeight}
               radius={999}
-              fill="var(--color-mist)"
-              stroke="var(--color-mist)"
+              fill="var(--color-graphite)"
+              stroke="var(--color-graphite)"
               strokeWidth={1}
             />
-            <div
-              className="absolute left-0"
-              style={{ top: thumbTop, width: TRACK_WIDTH, height: thumbHeight }}
-            >
-              <Sketchy
-                width={TRACK_WIDTH}
-                height={thumbHeight}
-                radius={999}
-                fill="var(--color-graphite)"
-                stroke="var(--color-graphite)"
-                strokeWidth={1}
-              />
-            </div>
-          </>
+          </div>
         )}
       </div>
     </div>
