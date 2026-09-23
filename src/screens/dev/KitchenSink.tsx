@@ -279,13 +279,15 @@ export function KitchenSink() {
       </Section>
 
       <Section title="Strength Graph (§23)">
-        <StrengthGraph
-          points={[
-            { date: '2026-06-02', weight: 80, reps: 6, e1rm: 96 },
-            { date: '2026-07-14', weight: 80, reps: 8, e1rm: 101 },
-            { date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 },
-          ]}
-        />
+        <Card variant="filled">
+          <StrengthGraph
+            points={[
+              { date: '2026-06-02', weight: 80, reps: 6, e1rm: 96 },
+              { date: '2026-07-14', weight: 80, reps: 8, e1rm: 101 },
+              { date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 },
+            ]}
+          />
+        </Card>
       </Section>
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px]">

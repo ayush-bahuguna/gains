@@ -4,7 +4,6 @@ import { formatWeekdayOrdinal, fromISODate } from '../lib/date'
 import type { BestSetPoint } from '../lib/personalRecord'
 import { useClickOutside } from '../lib/useClickOutside'
 import { useMeasure } from '../lib/useMeasure'
-import { Card } from './Card'
 import { Sketchy } from './Sketchy'
 
 type StrengthGraphProps = {
@@ -15,7 +14,13 @@ type StrengthGraphProps = {
   height?: number
 }
 
-const PADDING_LEFT = 30
+/** Left inset reserved for the y-axis weight labels — exported so
+ *  RecentPRsList (rendered directly below this, inside the same Card) can
+ *  indent its own content to the same x-position instead of starting flush
+ *  with the container edge. */
+export const GRAPH_LABEL_INDENT = 30
+
+const PADDING_LEFT = GRAPH_LABEL_INDENT
 const PADDING_RIGHT = 8
 const PADDING_TOP = 14
 const PADDING_BOTTOM = 22
@@ -171,17 +176,15 @@ export function StrengthGraph({ points, height = 180 }: StrengthGraphProps) {
 
   if (points.length === 0) {
     return (
-      <Card variant="filled">
-        <p className="py-6 text-center text-sm text-graphite">
-          No sessions logged yet for this exercise.
-        </p>
-      </Card>
+      <p className="py-6 text-center text-sm text-graphite">
+        No sessions logged yet for this exercise.
+      </p>
     )
   }
 
   if (points.length === 1) {
     return (
-      <Card variant="filled">
+      <>
         <div ref={containerRef} className="relative" style={{ height }}>
           {width > 0 && (
             <svg width={width} height={height} className="absolute inset-0">
@@ -192,12 +195,12 @@ export function StrengthGraph({ points, height = 180 }: StrengthGraphProps) {
         <p className="mt-1 text-center text-xs text-graphite">
           Not enough data yet — one more session will start a trend line.
         </p>
-      </Card>
+      </>
     )
   }
 
   return (
-    <Card variant="filled">
+    <>
       <div ref={containerRef} className="relative" style={{ height }}>
         {plot && (
           <>
@@ -294,6 +297,6 @@ export function StrengthGraph({ points, height = 180 }: StrengthGraphProps) {
           onClose={() => setActiveIndex(null)}
         />
       )}
-    </Card>
+    </>
   )
 }

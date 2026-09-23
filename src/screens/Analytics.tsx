@@ -462,14 +462,10 @@ export function Analytics() {
                   ))}
                 </div>
               </Modal>
-              <StrengthGraph points={selected?.bestSets ?? []} />
-
-              <div className="mt-4">
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">
-                  Recent PRs
-                </p>
+              <Card variant="filled">
+                <StrengthGraph points={selected?.bestSets ?? []} />
                 <RecentPRsList bestSets={selected?.bestSets ?? []} />
-              </div>
+              </Card>
             </>
           )}
         </div>

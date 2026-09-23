@@ -1,3 +1,5 @@
+import { Card } from '../../components/Card'
+import { RecentPRsList } from '../../components/RecentPRsList'
 import { StrengthGraph } from '../../components/StrengthGraph'
 
 const gapped = [
@@ -14,23 +16,30 @@ export function StrengthGraphCheck() {
 
       <div className="space-y-2">
         <p className="text-sm text-graphite">Empty</p>
-        <StrengthGraph points={[]} />
+        <Card variant="filled">
+          <StrengthGraph points={[]} />
+        </Card>
       </div>
 
       <div className="space-y-2">
         <p className="text-sm text-graphite">Single point</p>
-        <StrengthGraph
-          points={[{ date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 }]}
-        />
+        <Card variant="filled">
+          <StrengthGraph
+            points={[{ date: '2026-09-21', weight: 90, reps: 6, e1rm: 108 }]}
+          />
+        </Card>
       </div>
 
       <div className="space-y-2">
         <p className="text-sm text-graphite">
           Multiple points with a long real-world gap (Jun 16 → Sep 10) — drawn evenly
           spaced, not scaled by elapsed time, nothing interpolated across the gap. Tap a
-          point to open its tooltip.
+          point to open its tooltip. Graph and Recent PRs share one container.
         </p>
-        <StrengthGraph points={gapped} />
+        <Card variant="filled">
+          <StrengthGraph points={gapped} />
+          <RecentPRsList bestSets={gapped} />
+        </Card>
       </div>
     </div>
   )

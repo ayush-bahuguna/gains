@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Card } from '../components/Card'
 import { HeaderDivider } from '../components/HeaderDivider'
 import { RecentPRsList } from '../components/RecentPRsList'
 import { StrengthGraph } from '../components/StrengthGraph'
@@ -78,15 +79,10 @@ export function StrengthExerciseDetail() {
         ) : exercise === null ? (
           <p className="text-sm text-graphite">No history found for this exercise.</p>
         ) : (
-          <>
+          <Card variant="filled">
             <StrengthGraph points={exercise.bestSets} />
-            <div>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-graphite">
-                Recent PRs
-              </p>
-              <RecentPRsList bestSets={exercise.bestSets} />
-            </div>
-          </>
+            <RecentPRsList bestSets={exercise.bestSets} />
+          </Card>
         )}
       </div>
     </div>
