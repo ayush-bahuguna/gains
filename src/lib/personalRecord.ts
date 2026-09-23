@@ -3,6 +3,12 @@ export function epley1RM(weight: number, reps: number): number {
   return weight * (1 + reps / 30)
 }
 
+/** Algebraic inverse of epley1RM — the weight needed at a given rep count to
+ *  hit a target e1RM (used to show "lift X kg for Y reps to reach +10%"). */
+export function weightForE1RM(targetE1RM: number, atReps: number): number {
+  return targetE1RM / (1 + atReps / 30)
+}
+
 export function bestEpley(sets: { weight: number; reps: number }[]): number {
   return sets.reduce((max, s) => Math.max(max, epley1RM(s.weight, s.reps)), 0)
 }

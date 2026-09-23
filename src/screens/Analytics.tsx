@@ -4,12 +4,14 @@ import { Card } from '../components/Card'
 import { Chip } from '../components/Chip'
 import { CoverageList } from '../components/CoverageList'
 import { DayTooltip } from '../components/DayTooltip'
-import { Dropdown } from '../components/Dropdown'
 import { HeaderDivider } from '../components/HeaderDivider'
+import { IconChevronDown } from '../components/icons'
 import { ImprovementsList } from '../components/ImprovementsList'
+import { Modal } from '../components/Modal'
 import { MonthActivityGraph } from '../components/MonthActivityGraph'
 import { OverviewTile } from '../components/OverviewTile'
 import { RecentPRsList } from '../components/RecentPRsList'
+import { Sketchy } from '../components/Sketchy'
 import { StrengthGraph } from '../components/StrengthGraph'
 import {
   buildExerciseSummaries,
@@ -22,6 +24,7 @@ import { daysInMonth, fromISODate, toISODate } from '../lib/date'
 import { MUSCLE_GROUPS } from '../lib/muscleGroups'
 import { bestEpleyByExerciseAndSession } from '../lib/personalRecord'
 import { supabase } from '../lib/supabase'
+import { useMeasure } from '../lib/useMeasure'
 import { useAuthStore } from '../store/authStore'
 
 // ---- Calendar section (moved from Me.tsx) ----
@@ -46,6 +49,37 @@ type AllTimeSessionRow = {
   id: string
   date: string
   exercises: AllTimeExerciseRow[] | null
+}
+
+// Same visual shell as Dropdown.tsx (Sketchy paper pill + chevron), but
+// opens the exercise-picker Modal instead of a native <select> — the
+// picker needs a centered dark-overlay modal, not a dropdown.
+function ExercisePickerButton({
+  label,
+  onClick,
+}: {
+  label: string
+  onClick: () => void
+}) {
+  const [ref, size] = useMeasure<HTMLDivElement>()
+  return (
+    <div ref={ref} className="relative flex flex-1 items-center px-4 py-3">
+      <Sketchy
+        width={size.width}
+        height={size.height}
+        radius={16}
+        fill="var(--color-paper)"
+      />
+      <button
+        type="button"
+        onClick={onClick}
+        className="relative z-10 flex-1 truncate text-left text-sm text-ink"
+      >
+        {label}
+      </button>
+      <IconChevronDown className="relative z-10 h-4 w-4 shrink-0 text-ink" />
+    </div>
+  )
 }
 
 export function Analytics() {
@@ -245,7 +279,12 @@ export function Analytics() {
         (e): e is { name: string; result: NonNullable<typeof e.result> } =>
           e.result !== null,
       )
-      .map((e) => ({ name: e.name, pct: e.result.pct }))
+      .map((e) => ({
+        name: e.name,
+        pct: e.result.pct,
+        baselinePoint: e.result.baselinePoint,
+        currentPoint: e.result.currentPoint,
+      }))
   }, [exercises, periodStart])
   const improvedCount = improvements.filter((e) => e.pct > 0).length
 
@@ -267,6 +306,7 @@ export function Analytics() {
   // null = no explicit user selection yet — defaults to the most-recently-performed
   // exercise (exercises[0], already sorted that way) once data has loaded.
   const [selectedDbId, setSelectedDbId] = useState<string | null>(null)
+  const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
   const effectiveDbId = selectedDbId ?? exercises[0]?.dbId ?? null
   const selected = exercises.find((e) => e.dbId === effectiveDbId) ?? null
 
@@ -384,17 +424,10 @@ export function Analytics() {
           ) : (
             <>
               <div className="mb-3 flex items-center gap-2">
-                <Dropdown
-                  className="flex-1"
-                  value={effectiveDbId ?? ''}
-                  onChange={(e) => setSelectedDbId(e.target.value)}
-                >
-                  {exercises.map((e) => (
-                    <option key={e.dbId} value={e.dbId}>
-                      {e.name}
-                    </option>
-                  ))}
-                </Dropdown>
+                <ExercisePickerButton
+                  label={selected?.name ?? 'Select exercise'}
+                  onClick={() => setExercisePickerOpen(true)}
+                />
                 <button
                   type="button"
                   onClick={() => navigate('/analytics/strength')}
@@ -403,6 +436,32 @@ export function Analytics() {
                   More →
                 </button>
               </div>
+
+              <Modal
+                isOpen={exercisePickerOpen}
+                onClose={() => setExercisePickerOpen(false)}
+                title="Select Exercise"
+              >
+                <div className="-mx-1 flex flex-col">
+                  {exercises.map((e) => (
+                    <button
+                      key={e.dbId}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDbId(e.dbId)
+                        setExercisePickerOpen(false)
+                      }}
+                      className={`rounded-xl px-3 py-2.5 text-left text-sm ${
+                        e.dbId === effectiveDbId
+                          ? 'bg-mist text-ink'
+                          : 'text-ink active:bg-ink/5'
+                      }`}
+                    >
+                      {e.name}
+                    </button>
+                  ))}
+                </div>
+              </Modal>
               <StrengthGraph points={selected?.bestSets ?? []} />
 
               <div className="mt-4">

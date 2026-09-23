@@ -47,8 +47,13 @@ function evenlySpacedIndices(length: number, count: number): number[] {
 // Same anchored/auto-dismiss/tap-outside mechanics as DayTooltip.tsx (the
 // calendar's day tooltip) — kept file-local rather than shared, since that
 // component's editable skip-reason concepts don't apply here.
-const TOOLTIP_WIDTH = 180
-const TOOLTIP_HEIGHT = 68
+// This app's root font-size is bumped to 19px (see index.css) to keep the
+// handwritten fonts legible, so text-xs/text-sm render notably larger than
+// their usual 12/14px — a tooltip sized for typical rem assumptions clips
+// its own content here. Sized generously (and matching DayTooltip's own
+// WIDTH) for 3 stacked lines at this app's actual font scale.
+const TOOLTIP_WIDTH = 220
+const TOOLTIP_HEIGHT = 108
 const TOOLTIP_MARGIN = 8
 const TOOLTIP_GAP = 8
 const AUTO_DISMISS_MS = 3000
@@ -115,7 +120,9 @@ function GraphPointTooltip({
         <p className="mt-1 text-sm text-ink">
           {Math.round(point.weight * 100) / 100} kg × {point.reps}
         </p>
-        <p className="text-xs text-graphite">Est. 1RM: {Math.round(point.e1rm)} kg</p>
+        <p className="mt-1 text-xs text-graphite">
+          Est. 1RM: {Math.round(point.e1rm)} kg
+        </p>
       </div>
     </div>,
     document.body,

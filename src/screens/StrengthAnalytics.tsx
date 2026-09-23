@@ -140,7 +140,17 @@ export function StrengthAnalytics() {
                   <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-graphite">
                     <p>
                       Improvement:{' '}
-                      <span className="font-medium text-ink">
+                      <span
+                        className={`font-medium ${
+                          !improvement
+                            ? 'text-ink'
+                            : improvement.pct > 0
+                              ? 'text-sage'
+                              : improvement.pct < 0
+                                ? 'text-coral'
+                                : 'text-ink'
+                        }`}
+                      >
                         {improvement
                           ? `${improvement.pct >= 0 ? '+' : ''}${improvement.pct.toFixed(1)}%`
                           : '—'}

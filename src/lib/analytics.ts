@@ -12,7 +12,11 @@ export function periodStartISO(period: Period, today: Date = new Date()): string
   return toISODate(start)
 }
 
-export type ImprovementResult = { baseline: number; current: number; pct: number }
+export type ImprovementResult = {
+  baselinePoint: BestSetPoint
+  currentPoint: BestSetPoint
+  pct: number
+}
 
 /**
  * v1 improvement algorithm (docs/Gains_Analytics_Spec.md, "Improvement Calculation"):
@@ -21,9 +25,11 @@ export type ImprovementResult = { baseline: number; current: number; pct: number
  * - pct: (current - baseline) / baseline * 100
  * Returns null when there's no baseline (fewer than 2 ever-logged sessions) or
  * no data within the selected period — both mean "not enough data to show a trend".
+ * Keeps the actual winning BestSetPoint for baseline/current (not just their
+ * e1RM number) so a caller can show the real weight/reps behind the %.
  */
 export function computeImprovement(
-  allTimePoints: { date: string; e1rm: number }[],
+  allTimePoints: BestSetPoint[],
   periodStart: string | null,
 ): ImprovementResult | null {
   if (allTimePoints.length < 2) return null
@@ -36,8 +42,11 @@ export function computeImprovement(
   // trivially shows 0% even when the graph visibly trends upward across them.
   const baselineCount = Math.min(3, ascending.length - 1)
   const baselinePoints = ascending.slice(0, baselineCount)
-  const baseline = Math.max(...baselinePoints.map((p) => p.e1rm))
-  if (baseline <= 0) return null
+  const baselinePoint = baselinePoints.reduce(
+    (best, p) => (p.e1rm > best.e1rm ? p : best),
+    baselinePoints[0],
+  )
+  if (baselinePoint.e1rm <= 0) return null
 
   const candidatePoints = ascending.slice(baselineCount)
   const periodPoints = periodStart
@@ -45,9 +54,19 @@ export function computeImprovement(
     : candidatePoints
   if (periodPoints.length === 0) return null
 
-  const current = Math.max(...periodPoints.map((p) => p.e1rm))
-  const pct = ((current - baseline) / baseline) * 100
-  return { baseline, current, pct }
+  const currentPoint = periodPoints.reduce(
+    (best, p) => (p.e1rm > best.e1rm ? p : best),
+    periodPoints[0],
+  )
+  const pct = ((currentPoint.e1rm - baselinePoint.e1rm) / baselinePoint.e1rm) * 100
+  return { baselinePoint, currentPoint, pct }
+}
+
+/** Smallest multiple of 10 strictly greater than `pct` — e.g. 8.3 → 10,
+ *  -5 → 0, 12 → 20, -15 → -10. Used for a "lift X kg to reach +10%"-style
+ *  forward-looking target in the Improvements list. */
+export function nextMilestonePct(pct: number): number {
+  return (Math.floor(pct / 10) + 1) * 10
 }
 
 export type CoverageGroup = { label: string; exerciseNames: string[] }
