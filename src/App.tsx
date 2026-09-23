@@ -2,6 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireAuth } from './components/RequireAuth'
 import { ActiveSession } from './screens/ActiveSession'
+import { Analytics } from './screens/Analytics'
+import { StrengthAnalytics } from './screens/StrengthAnalytics'
+import { StrengthExerciseDetail } from './screens/StrengthExerciseDetail'
 import { ExerciseDetail } from './screens/ExerciseDetail'
 import { ExerciseLibrary } from './screens/ExerciseLibrary'
 import { HistoryList } from './screens/HistoryList'
@@ -30,6 +33,8 @@ import { MiscCheck } from './screens/dev/MiscCheck'
 import { VoiceCheck } from './screens/dev/VoiceCheck'
 import { CalendarCheck } from './screens/dev/CalendarCheck'
 import { DayTooltipCheck } from './screens/dev/DayTooltipCheck'
+import { StrengthGraphCheck } from './screens/dev/StrengthGraphCheck'
+import { OverviewTileCheck } from './screens/dev/OverviewTileCheck'
 import { KitchenSink } from './screens/dev/KitchenSink'
 
 function App() {
@@ -95,6 +100,30 @@ function App() {
         />
         <Route path="/me" element={<Me />} />
         <Route
+          path="/analytics"
+          element={
+            <RequireAuth>
+              <Analytics />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/analytics/strength"
+          element={
+            <RequireAuth>
+              <StrengthAnalytics />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/analytics/strength/:exerciseDbId"
+          element={
+            <RequireAuth>
+              <StrengthExerciseDetail />
+            </RequireAuth>
+          }
+        />
+        <Route
           path="/session/:id"
           element={
             <RequireAuth>
@@ -131,6 +160,8 @@ function App() {
       <Route path="/_dev/voice" element={<VoiceCheck />} />
       <Route path="/_dev/calendar" element={<CalendarCheck />} />
       <Route path="/_dev/daytooltip" element={<DayTooltipCheck />} />
+      <Route path="/_dev/strengthgraph" element={<StrengthGraphCheck />} />
+      <Route path="/_dev/overviewtile" element={<OverviewTileCheck />} />
       <Route path="/_dev/components" element={<KitchenSink />} />
     </Routes>
   )

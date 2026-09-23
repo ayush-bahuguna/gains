@@ -27,12 +27,14 @@ import { ListCard } from '../../components/ListCard'
 import { MonthActivityGraph } from '../../components/MonthActivityGraph'
 import { NotesBox } from '../../components/NotesBox'
 import { NumberStepper } from '../../components/NumberStepper'
+import { OverviewTile } from '../../components/OverviewTile'
 import { PaginationDots } from '../../components/PaginationDots'
 import { ProgressBar } from '../../components/ProgressBar'
 import { RadioButton } from '../../components/RadioButton'
 import { SearchInput } from '../../components/SearchInput'
 import type { SetRowData } from '../../components/SetTable'
 import { Slider } from '../../components/Slider'
+import { StrengthGraph } from '../../components/StrengthGraph'
 import { TemplateCard } from '../../components/TemplateCard'
 import { TextInput } from '../../components/TextInput'
 import { Toggle } from '../../components/Toggle'
@@ -265,6 +267,24 @@ export function KitchenSink() {
           onReasonBlur={() => {}}
           onNavigate={() => {}}
           onClose={() => setTooltipVariant(null)}
+        />
+      </Section>
+
+      <Section title="Overview Tiles (§24)">
+        <div className="grid grid-cols-3 gap-3">
+          <OverviewTile value={42} label="Workouts" />
+          <OverviewTile value="6 / 7" label="Improvements" expanded onToggle={() => {}} />
+          <OverviewTile value="7 / 8" label="Coverage" onToggle={() => {}} />
+        </div>
+      </Section>
+
+      <Section title="Strength Graph (§23)">
+        <StrengthGraph
+          points={[
+            { date: '2026-06-02', e1rm: 80 },
+            { date: '2026-07-14', e1rm: 84 },
+            { date: '2026-09-21', e1rm: 90 },
+          ]}
         />
       </Section>
 

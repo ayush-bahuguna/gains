@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDailyMotivation } from '../lib/dailyMotivation'
 import { formatDuration } from '../lib/duration'
-import { bestEpley } from '../lib/personalRecord'
+import { bestEpley, bestEpleyByExercise } from '../lib/personalRecord'
 import { supabase } from '../lib/supabase'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -119,13 +119,7 @@ export function SessionDetailView({ sessionId, variant }: SessionDetailViewProps
           .neq('session_id', sessionId)
 
         if (!cancelled) {
-          const maxMap = new Map<string, number>()
-          for (const row of historicalRows ?? []) {
-            const dbId = row.exercise_db_id as string
-            const best = bestEpley(row.sets ?? [])
-            maxMap.set(dbId, Math.max(maxMap.get(dbId) ?? 0, best))
-          }
-          setHistoricalMax(maxMap)
+          setHistoricalMax(bestEpleyByExercise(historicalRows ?? []))
         }
       }
 

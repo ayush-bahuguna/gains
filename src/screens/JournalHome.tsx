@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { IconBox } from '../components/IconBox'
-import { IconSearch } from '../components/icons'
+import { IconSearch, IconTrendingUp } from '../components/icons'
 import { MotivationGif } from '../components/MotivationGif'
 import { getDailyMotivation, type DailyMotivation } from '../lib/dailyMotivation'
 import { supabase } from '../lib/supabase'
@@ -134,6 +134,19 @@ export function JournalHome() {
               Explore exercises, muscles, equipment and how to perform them.
             </p>
             <p className="mt-2 text-xs font-medium text-ink">Browse Exercises →</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card onClick={() => navigate('/analytics')} className="cursor-pointer text-left">
+        <div className="flex items-start gap-3">
+          <IconBox icon={<IconTrendingUp className="h-5 w-5" />} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-ink">Analytics</p>
+            <p className="mt-1 text-xs text-graphite">
+              Consistency, strength progress and personal records.
+            </p>
+            <p className="mt-2 text-xs font-medium text-ink">View Analytics →</p>
           </div>
         </div>
       </Card>
