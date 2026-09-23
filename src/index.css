@@ -64,9 +64,11 @@ h3 {
   min-height: 100%;
 }
 
+html,
 .no-scrollbar {
   scrollbar-width: none;
 }
+html::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

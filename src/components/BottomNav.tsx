@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useMeasure } from '../lib/useMeasure'
 import {
@@ -48,8 +49,25 @@ function TopDivider() {
 }
 
 export function BottomNav() {
+  const [navRef, navSize] = useMeasure<HTMLDivElement>()
+
+  // Published as a CSS var (rather than prop-drilled) so anything on the
+  // page — e.g. ScrollIndicator — can size itself to stop exactly above the
+  // nav's real rendered height (including its own safe-area padding) without
+  // needing a direct relationship to this component. useLayoutEffect (not
+  // useEffect) so the var is set before first paint — otherwise a consumer
+  // reading it via calc() briefly sees the var unset/0 and renders as if the
+  // nav weren't there.
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty(
+      '--bottom-nav-height',
+      `${navSize.height}px`,
+    )
+  }, [navSize.height])
+
   return (
     <div
+      ref={navRef}
       className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-[480px] bg-paper"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >

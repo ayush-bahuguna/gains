@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
+import { ScrollIndicator } from './ScrollIndicator'
 
 export function Layout() {
   return (
@@ -8,6 +9,7 @@ export function Layout() {
         <Outlet />
       </div>
       <BottomNav />
+      <ScrollIndicator />
     </div>
   )
 }
